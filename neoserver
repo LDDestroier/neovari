@@ -1,0 +1,208 @@
+-- neovari server
+
+local port = 262
+local id = os.getComputerID()
+local serverName = "neovari-server-"..math.random(1,999999)
+local modem = {}
+
+local ServData = {}
+
+local waitForModem = function(time)
+	local tID, evt, rID = os.startTimer(time or 1)
+	while true do
+		evt, rID = os.pullEvent()
+		if evt == "timer" then
+			if rID == tID then
+				return false
+			end
+		elseif evt == "peripheral" then
+			if peripheral.getType(rID) == "modem" then
+				return true
+			end
+		end
+	end
+end
+
+local getModem = function(timeout) --returns a working modem, prioritizes use of wireless modem
+	if modem.open then return modem end
+	local modems = {peripheral.find("modem")}
+	if #modems == 0 then
+		if waitForModem(timeout or 3) then
+			modems = {peripheral.find("modem")}
+		else
+			error("No modem found...")
+		end
+	end
+	for a = 1, #modems do
+		if modems[a].isWireless() then
+            modems[a].open(port)
+            modems[a].open(id)
+			return modems[a]
+		end
+	end
+    modems[1].open(port)
+    modems[1].open(id)
+	return modems[1]
+end
+
+modem = getModem()
+
+local saveData = function()
+	local file = fs.open(saveDir,"w")
+	file.write(textutils.serialize(ServData))
+	file.close()
+end
+
+local loadData = function()
+	local file = fs.open(saveDir,"r")
+	ServData = textutils.unserialize(file.readAll())
+	file.close()
+end
+
+local logadd = function(text,display)
+	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..(text or "Invalid Log Entry")
+	--[[
+	local file = fs.open(logdir,"a")
+	file.writeLine(line)
+	file.close()
+	--]]
+	if display then print(line) end
+end
+
+local main = function()
+	local evt
+	while true do
+		evt = {os.pullEvent()}
+		if evt[1] == "modem_message" then
+			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
+			if type(msg) == "table" and ((freq == port) or (freq == id))  then
+				if (type(msg.id) == "string" or type(msg.id) == "number") and (type(msg.response) == "string") then
+				
+					if (type(msg.gameName) == "string") and (msg.serverName == serverName) then
+						
+						if msg.response == "getVariable" then
+							local response = {}
+							response.success = false
+							if type(msg.varname) == "string" and type(msg.user) == "string" and ServData[msg.gameName] then
+								if ServData[msg.gameName][msg.user] then
+									response.success = true
+									if ServData[msg.gameName] then
+										if ServData[msg.gameName][msg.user] then
+											response.varval = ServData[msg.gameName][msg.user][msg.varname]
+										end
+									end
+								end
+							end
+							modem = getModem()
+							modem.transmit(msg.id,port,{
+								id = id,
+								serverName = serverName,
+								gameName = msg.gameName,
+								clientName = msg.clientName,
+								user = msg.user,
+								clientID = msg.id,
+								response = "getVariable_response",
+								varval = response.varval,
+								varname = msg.varname,
+								success = response.success
+							})
+							logadd("getVariable "..tostring(response.success),true)
+						end
+						
+						if msg.response == "setVariable" then
+							local result
+							if (type(msg.varname) == "string") and (type(msg.user) == "string") and (type(msg.gameName) == "string") then
+								if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
+								if not ServData[msg.gameName][msg.user] then ServData[msg.gameName][msg.user] = {} end
+								ServData[msg.gameName][msg.user][msg.varname] = (msg.varval)
+								result = true
+							else
+								result = false
+							end
+							modem.transmit(msg.id,port,{
+								id = id,
+								serverName = serverName,
+								gameName = msg.gameName,
+								clientName = msg.clientName,
+								user = msg.user,
+								clientID = msg.id,
+								varname = msg.varname,
+								response = "setVariable_response",
+								success = result
+							})
+							logadd("setVariable "..tostring(result),true)
+						end
+						
+						if msg.response == "getEnvironment" then
+							local response = {}
+							response.varval = {}
+							response.success = false
+							if (type(msg.user) == "string") and (type(msg.gameName) == "string") then
+                                if ServData[msg.gameName] then
+    								response.success = true
+	    							if ServData[msg.gameName] then
+		    							for k,v in pairs(ServData[msg.gameName][msg.user]) do
+			    							response.varval[k] = v
+				    					end
+					    			end
+								end
+							end
+							modem = getModem()
+							modem.transmit(msg.id,port,{
+								id = id,
+								serverName = serverName,
+								gameName = msg.gameName,
+								clientName = msg.clientName,
+								user = msg.user,
+								clientID = msg.id,
+								response = "getEnvironment_response",
+								success = response.success,
+								environment = response.varval
+							})
+							logadd("getEnvironment "..tostring(response.success),true)
+						end
+						
+						if msg.response == "setEnvironment" then
+							local result
+							if (type(msg.environment) == "table") and (type(msg.user) == "string") and (type(msg.gameName) == "string") then
+								if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
+								ServData[msg.gameName][msg.user] = (msg.environment)
+								result = true
+							else
+								result = false
+							end
+							modem.transmit(msg.id,port,{
+								id = id,
+								serverName = serverName,
+								gameName = msg.gameName,
+								clientName = msg.clientName,
+								user = msg.user,
+								clientID = msg.id,
+								response = "setEnvironment_response",
+								success = result
+							})
+							logadd("setVariable "..tostring(result),true)
+						end
+					else
+						if msg.response == "lookup" then
+							modem = getModem()
+							modem.transmit(msg.id,port,{
+								id = id,
+								serverName = serverName,
+								clientName = msg.clientName,
+								response = "lookup_response",
+							})
+							logadd("lookup from "..msg.clientName.." (ID: "..msg.id..")",true)
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+term.clear()
+term.setCursorPos(1,1)
+logadd("Initialized. (name:'"..serverName.."')",true)
+
+main()
