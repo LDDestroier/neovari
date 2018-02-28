@@ -1,4 +1,41 @@
--- neovari API
+--[[
+ NeoVariable API
+
+ Make sure a NeoVariable server is set up within modem range.
+  Functions So Far:
+  
+   serverName, serverID = neovari.findServer( number timeout, number ID )
+  Finds a server, and returns its name.
+  Searches for 'timeout' seconds.
+  If optional argument 'ID' is defined, it will only accept the server with that ID.
+  
+   success = neovari.setVariable( string serverName, string gameName, string userName, string variableName, any variableValue )
+  Each variable on a NeoVariable server is stored in the following structure:
+  allVariables = {
+  	  gameName = {
+		  userName = {
+			  variableName = variableValue,
+		  }, ...
+	  }, ...
+  }
+  This function sets the variable 'variableName' inside of 'userName' inside of 'gameName' as 'variableName'.
+  
+   success, variable = neovari.getVariable( string serverName, string gameName, string userName, string variableName )
+  This takes the same arguments as neovari.setVariable, except for variableValue.
+  Returns the value of 'variableName' inside of 'userName' inside of 'gameName'.
+   
+  
+   success = neovari.setEnvironment( string serverName, string gameName, string userName, table everyVariable )
+  Sets every variable in 'serverName' in 'gameName' in 'userName' to all the numerical values in 'everyVariable'.
+  The table 'everyVariable' would be in this string-indexed table format:
+  {
+  	var1 = "hello ",
+	var2 = "world!"
+  }
+  
+   success, environment = getEnvironment( string serverName, string gameName, string userName )
+  Returns every variable in 'serverName' in 'gameName' in 'userName' in a string-indexed table, like the one above.
+--]]
 
 local port = 262
 local id = os.getComputerID()
@@ -33,19 +70,19 @@ local getModem = function(timeout) --returns a working modem, prioritizes use of
 	end
 	for a = 1, #modems do
 		if modems[a].isWireless() then
-            modems[a].open(port)
-            modems[a].open(id)
+			modems[a].open(port)
+			modems[a].open(id)
 			return modems[a]
 		end
 	end
-    modems[1].open(port)
-    modems[1].open(id)
+	modems[1].open(port)
+	modems[1].open(id)
 	return modems[1]
 end
 
 modem = getModem()
 
-findServer = function(timeout) --returns server name, server ID
+findServer = function(timeout, sID) --returns server name, server ID
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
@@ -61,7 +98,9 @@ findServer = function(timeout) --returns server name, server ID
 			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
 			if (freq == id) and (type(msg) == "table") then
 				if (type(msg.id) == "number") and (msg.response == "lookup_response") and (type(msg.serverName) == "string") and (msg.clientName == clientName) then
-					return msg.serverName, msg.id
+					if (not sID) or (sID == msg.id) then
+						return msg.serverName, msg.id
+					end
 				end
 			end
 		end
@@ -69,12 +108,12 @@ findServer = function(timeout) --returns server name, server ID
 end
 
 getVariable = function(server, gameName, user, variableName, timeout) --returns success, value
-	modem = getModem()
+	if type(variableName) == "number" then variableName = tostring(variableName) end
 	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
 	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
 	if not (type(user) == "string") then error("bad argument, specifically 'user'") end
 	if not (type(variableName) == "string") then error("bad argument, specifically 'variableName'") end
-	
+	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
 		gameName = gameName,
@@ -101,10 +140,12 @@ getVariable = function(server, gameName, user, variableName, timeout) --returns 
 end
 
 setVariable = function(server, gameName, user, variableName, variableValue, timeout) --returns success
+	if type(variableName) == "number" then variableName = tostring(variableName) end
 	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
 	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
 	if not (type(user) == "string") then error("bad argument, specifically 'user'") end
 	if not (type(variableName) == "string") then error("bad argument, specifically 'variableName'") end
+	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
 		gameName = gameName,
@@ -135,6 +176,7 @@ getEnvironment = function(server, gameName, user) --returns success, environment
 	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
 	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
 	if not (type(user) == "string") then error("bad argument, specifically 'user'") end
+	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
 		gameName = gameName,
@@ -164,6 +206,7 @@ setEnvironment = function(server, gameName, user, environment, timeout) --return
 	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
 	if not (type(user) == "string") then error("bad argument, specifically 'user'") end
 	if not (type(environment) == "table") then error("bad argument, specifically 'environment'") end
+	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
 		gameName = gameName,
