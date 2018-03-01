@@ -3,6 +3,7 @@
 local port = 262
 local id = os.getComputerID()
 local serverName = "neovari-server-"..math.random(1,999999)
+local logdir = ".neolog"
 local modem = {}
 
 local ServData = {}
@@ -138,13 +139,13 @@ local main = function()
 							response.varval = {}
 							response.success = false
 							if (type(msg.user) == "string") and (type(msg.gameName) == "string") then
-                                if ServData[msg.gameName] then
-    								response.success = true
-	    							if ServData[msg.gameName] then
-		    							for k,v in pairs(ServData[msg.gameName][msg.user]) do
-			    							response.varval[k] = v
-				    					end
-					    			end
+								if ServData[msg.gameName] then
+									response.success = true
+									if ServData[msg.gameName] then
+		    								for k,v in pairs(ServData[msg.gameName][msg.user]) do
+											response.varval[k] = v
+										end
+									end
 								end
 							end
 							modem = getModem()
@@ -182,6 +183,30 @@ local main = function()
 								success = result
 							})
 							logadd("setVariable "..tostring(result),true)
+						end
+						
+						if msg.response == "getUsers" then
+							local response = {}
+							response.success = false
+							if ServData[msg.gameName] then
+								response.success = true
+								response.users = {}
+								for k,v in pairs(ServData[msg.gameName]) do
+									response.users[#response.varval+1] = k
+								end
+							end
+							modem = getModem()
+							modem.transmit(msg.id,port,{
+								id = id,
+								serverName = serverName,
+								gameName = msg.gameName,
+								clientName = msg.clientName,
+								clientID = msg.id,
+								response = "getUsers_response",
+								users = response.users,
+								success = response.success
+							})
+							logadd("getUsers "..tostring(response.success),true)
 						end
 					else
 						if msg.response == "lookup" then
