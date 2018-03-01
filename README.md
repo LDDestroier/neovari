@@ -1,5 +1,5 @@
 # NeoVariable Server/API
-A "cloud variable" solution for ComputerCraft. Designed to make net-based apps like multiplayer games easier to code.
+A "cloud variable" solution for ComputerCraft using the modem API. Designed to make net-based apps like multiplayer games easier to code.
 
 
 # Documentation:
