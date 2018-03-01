@@ -1,6 +1,15 @@
 # NeoVariable Server/API
 A "cloud variable" solution for ComputerCraft using the modem API. Designed to make net-based apps like multiplayer games easier to code.
 
+## Downloads:
+Client API:
+```
+wget https://raw.githubusercontent.com/LDDestroier/neovari/master/neovari neovari
+```
+Server:
+```
+wget https://raw.githubusercontent.com/LDDestroier/neovari/master/neoserver neoserver
+```
 
 # Documentation:
 
