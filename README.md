@@ -58,3 +58,23 @@ allVariables = {
 success, environment = getEnvironment( string serverName, string gameName, string userName )```
 ```
 Returns every variable in '**serverName**' in '**gameName**' in '**userName**' in a string-indexed table, like the one above.
+
+```
+success, users = neovari.getUsers( string serverName, string gameName )
+```
+Returns a numerically indexed table containing all users that have variables attached to them.
+
+```
+success = neovari.clearVariable( string serverName, string gameName, string variableName )
+```
+Sets '**variableName**' in '**gameName**' in '**serverName**' to nil.
+
+```
+success = neovari.clearUser(string serverName, string.gameName, string userName)
+```
+Sets every variable belonging to '**userName**' to nil, effectively removing that user from '**gameName**'.
+
+```
+success = neovari.clearGame( string serverName, string gameName )
+```
+Removes '**gameName**' from '**serverName**', along with any users within it.
