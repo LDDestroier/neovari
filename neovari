@@ -216,10 +216,45 @@ getUsers = function(server, gameName, timeout) --returns success, users
 			return false
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
-				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "getUsers_response") and (type(msg.users) == "table") and (msg.user == user) and (type(msg.success) == "boolean") then
+				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "getUsers_response") and (type(msg.users) == "table") and (type(msg.success) == "boolean") then
 					return msg.success, msg.users
 				end
 			end
 		end
 	end
+end
+
+clearGame = function(server, gameName, timeout)
+	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
+	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
+	modem = getModem()
+	modem.transmit(port,id,{
+		id = id,
+		gameName = gameName,
+		serverName = server,
+		clientName = clientName,
+		response = "clearGame",
+	})
+	local tID = os.startTimer(timeout or 3)
+	local evt, rID, freq, repfreq, msg, distance
+	while true do
+		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
+		if evt == "timer" and rID == tID then
+			return false
+		elseif evt == "modem_message" then
+			if (freq == id) and (type(msg) == "table") then
+				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "clearGame_response") and (type(msg.success) == "boolean") then
+					return msg.success
+				end
+			end
+		end
+	end
+end
+
+clearVariable = function(server, gameName, user, variableName, timeout)
+	return setVariable(server, gameName, user, variableName, nil, timeout)
+end
+
+clearUser = function(server, gameName, user, timeout)
+	return setEnvironment(server, gameName, user, {}, timeout)
 end
