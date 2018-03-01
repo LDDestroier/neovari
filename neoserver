@@ -187,12 +187,12 @@ local main = function()
 						
 						if msg.response == "getUsers" then
 							local response = {}
+							response.users = {}
 							response.success = false
 							if ServData[msg.gameName] then
 								response.success = true
-								response.users = {}
 								for k,v in pairs(ServData[msg.gameName]) do
-									response.users[#response.varval+1] = k
+									response.users[#response.users+1] = k
 								end
 							end
 							modem = getModem()
@@ -208,6 +208,27 @@ local main = function()
 							})
 							logadd("getUsers "..tostring(response.success),true)
 						end
+						
+						if msg.response == "clearGame" then
+							local result = false
+							if (type(msg.gameName) == "string") then
+								if ServData[msg.gameName] then
+									result = true
+									ServData[msg.gameName] = nil
+								end
+							end
+							modem.transmit(msg.id,port,{
+								id = id,
+								serverName = serverName,
+								gameName = msg.gameName,
+								clientName = msg.clientName,
+								clientID = msg.id,
+								response = "clearGame_response",
+								success = result
+							})
+							logadd("clearGame "..tostring(result),true)
+						end
+						
 					else
 						if msg.response == "lookup" then
 							modem = getModem()
