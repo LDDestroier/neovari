@@ -78,3 +78,22 @@ Sets every variable belonging to '**userName**' to nil, effectively removing tha
 success = neovari.clearGame( string serverName, string gameName )
 ```
 Removes '**gameName**' from '**serverName**', along with any users within it.
+
+```
+neovari.queueEvent( string serverName, string gameName, table tableOfEvents )
+```
+Sends an event + argument list to '**serverName**' for use with '**gameName**'. Format the events like this:
+```
+{
+	eventName,
+	parameter1,
+	parameter2,
+	...
+}
+```
+
+```
+neovari.pullEvent( string serverName, string gameName, string eventName )
+```
+Receives an event sent by 'neovari.queueEvent' to '**serverName**' and '**gameName**', similar to how os.pullEvent() handles it.
+Argument '**eventName**' is optional.
