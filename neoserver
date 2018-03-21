@@ -112,7 +112,7 @@ local main = function()
 						
 						if msg.response == "setVariable" then
 							local result
-							if (type(msg.varname) == "string") and (type(msg.user) == "string") and (type(msg.gameName) == "string") then
+							if (type(msg.varname) == "string") and (type(msg.user) == "string") then
 								if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
 								if not ServData[msg.gameName][msg.user] then ServData[msg.gameName][msg.user] = {} end
 								ServData[msg.gameName][msg.user][msg.varname] = (msg.varval)
@@ -138,7 +138,7 @@ local main = function()
 							local response = {}
 							response.varval = {}
 							response.success = false
-							if (type(msg.user) == "string") and (type(msg.gameName) == "string") then
+							if (type(msg.user) == "string") then
 								if ServData[msg.gameName] then
 									response.success = true
 									if ServData[msg.gameName] then
@@ -165,7 +165,7 @@ local main = function()
 						
 						if msg.response == "setEnvironment" then
 							local result
-							if (type(msg.environment) == "table") and (type(msg.user) == "string") and (type(msg.gameName) == "string") then
+							if (type(msg.environment) == "table") and (type(msg.user) == "string") then
 								if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
 								ServData[msg.gameName][msg.user] = (msg.environment)
 								result = true
@@ -232,11 +232,9 @@ local main = function()
 						
 						if msg.response == "clearGame" then
 							local result = false
-							if (type(msg.gameName) == "string") then
-								if ServData[msg.gameName] then
-									result = true
-									ServData[msg.gameName] = nil
-								end
+							if ServData[msg.gameName] then
+								result = true
+								ServData[msg.gameName] = nil
 							end
 							modem.transmit(msg.id,port,{
 								id = id,
