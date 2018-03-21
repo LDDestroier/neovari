@@ -96,7 +96,7 @@ getVariable = function(server, gameName, user, variableName, timeout) --returns 
 			return false
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
-				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "getVariable_response") and (msg.varname == variableName) and (msg.user == user) and (type(msg.success) == "boolean") then
+				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == gameName) and (msg.response == "getVariable_response") and (msg.varname == variableName) and (msg.user == user) and (type(msg.success) == "boolean") then
 					return msg.success, msg.varval
 				end
 			end
@@ -129,7 +129,7 @@ setVariable = function(server, gameName, user, variableName, variableValue, time
 			return false
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
-				if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "setVariable_response") and (msg.varname == variableName) and (msg.user == user) and (type(msg.success) == "boolean") then
+				if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == gameName) and (msg.response == "setVariable_response") and (msg.varname == variableName) and (msg.user == user) and (type(msg.success) == "boolean") then
 					return msg.success
 				end
 			end
@@ -158,7 +158,7 @@ getEnvironment = function(server, gameName, user) --returns success, environment
 			return false
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
-				if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "getEnvironment_response") and (msg.user == user) and (type(msg.success) == "boolean") and (type(msg.environment) == "table") then
+				if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == gameName) and (msg.response == "getEnvironment_response") and (msg.user == user) and (type(msg.success) == "boolean") and (type(msg.environment) == "table") then
 					return msg.success, msg.environment
 				end
 			end
@@ -189,8 +189,43 @@ setEnvironment = function(server, gameName, user, environment, timeout) --return
 			return false
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
-				if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "setEnvironment_response") and (msg.user == user) and (type(msg.success) == "boolean") then
+				if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == gameName) and (msg.response == "setEnvironment_response") and (msg.user == user) and (type(msg.success) == "boolean") then
 					return msg.success
+				end
+			end
+		end
+	end
+end
+
+queueEvent = function(server, gameName, eventTbl, timeout) --returns success
+	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
+	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
+	if not (type(eventTbl) == "table") then error("bad argument, specifically 'eventTbl'") end
+	modem = getModem()
+	modem.transmit(port,id,{
+		id = id,
+		gameName = gameName,
+		serverName = server,
+		clientName = clientName,
+		clientID = id,
+		eventTbl = eventTbl,
+		response = "queueEvent"
+	})
+end
+
+pullEvent = function(server, gameName, eventName, timeout)
+	local tID = os.startTimer(timeout or 3)
+	local evt, rID, freq, repfreq, msg, distance
+	while true do
+		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
+		if evt == "timer" and rID == tID then
+			return false
+		elseif evt == "modem_message" then
+			if (type(msg) == "table") then
+				if (msg.serverName == server) and (msg.gameName == gameName) and (msg.response == "queueEvent_response") and (type(msg.eventTbl) == "table") and (type(msg.success) == "boolean") then
+					if (not eventName) or (msg.eventTbl[1] == eventName) then
+						return msg.success, msg.eventTbl
+					end
 				end
 			end
 		end
@@ -216,7 +251,7 @@ getUsers = function(server, gameName, timeout) --returns success, users
 			return false
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
-				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "getUsers_response") and (type(msg.users) == "table") and (type(msg.success) == "boolean") then
+				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == gameName) and (msg.response == "getUsers_response") and (type(msg.users) == "table") and (type(msg.success) == "boolean") then
 					return msg.success, msg.users
 				end
 			end
@@ -243,7 +278,7 @@ clearGame = function(server, gameName, timeout)
 			return false
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
-				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "clearGame_response") and (type(msg.success) == "boolean") then
+				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == gameName) and (msg.response == "clearGame_response") and (type(msg.success) == "boolean") then
 					return msg.success
 				end
 			end
