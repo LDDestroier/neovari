@@ -6,26 +6,49 @@ Client API:
 ```
 wget https://raw.githubusercontent.com/LDDestroier/neovari/master/neovari neovari
 ```
-Server:
+Server Program:
 ```
 wget https://raw.githubusercontent.com/LDDestroier/neovari/master/neoserver neoserver
 ```
 
+The server does not require the client API.
+
 # Documentation:
 
- Make sure a NeoVariable server is set up within modem range.
-  Functions So Far:
-  ```
-   serverName, serverID = neovari.findServer( number timeout, number ID )
-  ```
-  Finds a server, and returns its name, with which you'll use with the other functions.
-  Searches for '**timeout**' seconds.
-  If optional argument '**ID**' is defined, it will only accept the server with that ID.
-  ```
-   success = neovari.setVariable( string serverName, string gameName, string userName, string variableName, any variableValue )
-  ```
+Make sure a NeoVariable server is set up within modem range.
+When there's a timeout, the default is to wait for a response for 1 second.
+ Functions So Far:
+
+```
+serverName, serverID = neovari.findServer( number timeout, number ID )
+```
+Finds a server, and returns its name, with which you'll use with the other functions.
+Searches for '**timeout**' seconds.
+If optional argument '**ID**' is defined, it will only accept the server with that ID.
+
+```
+neovari.findServerList( number timeout )
+```
+Returns a list of servers with their names and IDs.
+Formatted as such:
+```
+{
+	[1] = {
+		serverName = "Server1",
+		id = 1
+	},
+	[2] = {
+		serverName = "Server2",
+		id = 2
+	}, ...
+}
+```
   
-  Each variable on a NeoVariable server is stored in the following structure:
+```
+success = neovari.setVariable( string serverName, string gameName, string userName, string variableName, any variableValue )
+```
+This function sets the variable '**variableName**' inside of '**userName**' inside of '**gameName**' as '**variableName**'.
+Each variable on a NeoVariable server is stored in the following structure:
 ```
 allVariables = {
   	gameName = {
@@ -35,18 +58,18 @@ allVariables = {
 	}, ...
 }`
 ```
-  This function sets the variable '**variableName**' inside of '**userName**' inside of '**gameName**' as '**variableName**'.
-  ```
-   success, variable = neovari.getVariable( string serverName, string gameName, string userName, string variableName )```
-  ```
-  This takes the same arguments as neovari.setVariable, except for '**variableValue**'.
-  Returns the value of '**variableName**' inside of '**userName**' inside of '**gameName**'.
-   
-  ```
-   success = neovari.setEnvironment( string serverName, string gameName, string userName, table everyVariable )```
-  ```
-  Sets every variable in '**serverName**' in '**gameName**' in '**userName**' to all the values in '**everyVariable**'.
-  The table 'everyVariable' would be in this string-indexed table format:
+
+```
+success, variable = neovari.getVariable( string serverName, string gameName, string userName, string variableName )```
+```
+This takes the same arguments as neovari.setVariable, except for '**variableValue**'.
+Returns the value of '**variableName**' inside of '**userName**' inside of '**gameName**'.
+ 
+```
+success = neovari.setEnvironment( string serverName, string gameName, string userName, table everyVariable )```
+```
+Sets every variable in '**serverName**' in '**gameName**' in '**userName**' to all the values in '**everyVariable**'.
+The table 'everyVariable' would be in this string-indexed table format:
 ```
 {
 	var1 = "hello ",
@@ -54,6 +77,7 @@ allVariables = {
 	...
 }`
 ```
+
 ```
 success, environment = getEnvironment( string serverName, string gameName, string userName )```
 ```
