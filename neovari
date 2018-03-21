@@ -74,6 +74,7 @@ findServer = function(timeout, sID) --returns server name, server ID
 end
 
 findServerList = function(timeout) --returns table with servers
+	timeout = timeout or defaultTimeOut
 	assert(tonumber(timeout), "bad argument, especially 'timeout'")
 	modem = getModem()
 	modem.transmit(port,id,{
