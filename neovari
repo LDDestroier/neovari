@@ -214,7 +214,10 @@ queueEvent = function(server, gameName, eventTbl, timeout) --returns success
 end
 
 pullEvent = function(server, gameName, eventName, timeout)
-	local tID = os.startTimer(timeout or 3)
+	local tID
+	if tonumber(timeout) then
+		tID = os.startTimer(timeout)
+	end
 	local evt, rID, freq, repfreq, msg, distance
 	while true do
 		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
