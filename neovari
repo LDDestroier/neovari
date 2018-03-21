@@ -4,8 +4,9 @@
 
 local port = 262
 local id = os.getComputerID()
-local clientName = "neovari-client-"..math.random(1,999999)
+local clientName = "neovari-client-"..math.random(0,9999999)
 local modem = {}
+local defaultTimeOut = 1 --seconds
 
 local waitForModem = function(time)
 	local tID, evt, rID = os.startTimer(time or 1)
@@ -27,7 +28,7 @@ local getModem = function(timeout) --returns a working modem, prioritizes use of
 	if modem.open then return modem end
 	local modems = {peripheral.find("modem")}
 	if #modems == 0 then
-		if waitForModem(timeout or 3) then
+		if waitForModem(timeout or defaultTimeOut) then
 			modems = {peripheral.find("modem")}
 		else
 			error("No modem found...")
@@ -54,7 +55,7 @@ findServer = function(timeout, sID) --returns server name, server ID
 		clientName = clientName,
 		response = "lookup",
 	})
-	local tID, evt = os.startTimer(timeout or 3)
+	local tID, evt = os.startTimer(timeout or defaultTimeOut)
 	while true do
 		evt = {os.pullEvent()}
 		if evt[1] == "timer" and evt[2] == tID then
@@ -72,12 +73,39 @@ findServer = function(timeout, sID) --returns server name, server ID
 	end
 end
 
+findServerList = function(timeout) --returns table with servers
+	assert(tonumber(timeout), "bad argument, especially 'timeout'")
+	modem = getModem()
+	modem.transmit(port,id,{
+		id = id,
+		clientName = clientName,
+		response = "lookup",
+	})
+	local tID, evt = os.startTimer(timeout or defaultTimeOut)
+	local output = {}
+	while true do
+		evt = {os.pullEvent()}
+		if evt[1] == "timer" and evt[2] == tID then
+			return output
+		elseif evt[1] == "modem_message" then
+			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
+			if (freq == id) and (type(msg) == "table") then
+				if (type(msg.id) == "number") and (msg.response == "lookup_response") and (type(msg.serverName) == "string") and (msg.clientName == clientName) then
+					if (not sID) or (sID == msg.id) then
+						output[#output+1] = {serverName = msg.serverName, id = msg.id}
+					end
+				end
+			end
+		end
+	end
+end
+
 getVariable = function(server, gameName, user, variableName, timeout) --returns success, value
 	if type(variableName) == "number" then variableName = tostring(variableName) end
-	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
-	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
-	if not (type(user) == "string") then error("bad argument, specifically 'user'") end
-	if not (type(variableName) == "string") then error("bad argument, specifically 'variableName'") end
+	assert(type(server) == "string",	"bad argument, specifically 'server'")
+	assert(type(gameName) == "string",	"bad argument, specifically 'gameName'")
+	assert(type(user) == "string",		"bad argument, specifically 'user'")
+	assert(type(variableName) == "string",	"bad argument, specifically 'variableName'")
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
@@ -88,7 +116,7 @@ getVariable = function(server, gameName, user, variableName, timeout) --returns 
 		response = "getVariable",
 		varname = variableName
 	})
-	local tID = os.startTimer(timeout or 3)
+	local tID = os.startTimer(timeout or defaultTimeOut)
 	local evt, rID, freq, repfreq, msg, distance
 	while true do
 		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -106,10 +134,10 @@ end
 
 setVariable = function(server, gameName, user, variableName, variableValue, timeout) --returns success
 	if type(variableName) == "number" then variableName = tostring(variableName) end
-	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
-	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
-	if not (type(user) == "string") then error("bad argument, specifically 'user'") end
-	if not (type(variableName) == "string") then error("bad argument, specifically 'variableName'") end
+	assert(type(server) == "string",	"bad argument, specifically 'server'")
+	assert(type(gameName) == "string",	"bad argument, specifically 'gameName'")
+	assert(type(user) == "string",		"bad argument, specifically 'user'")
+	assert(type(variableName) == "string",	"bad argument, specifically 'variableName'")
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
@@ -121,7 +149,7 @@ setVariable = function(server, gameName, user, variableName, variableValue, time
 		varname = variableName,
 		varval = variableValue
 	})
-	local tID = os.startTimer(timeout or 3)
+	local tID = os.startTimer(timeout or defaultTimeOut)
 	local evt, rID, freq, repfreq, msg, distance
 	while true do
 		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -138,9 +166,9 @@ setVariable = function(server, gameName, user, variableName, variableValue, time
 end
 
 getEnvironment = function(server, gameName, user) --returns success, environment
-	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
-	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
-	if not (type(user) == "string") then error("bad argument, specifically 'user'") end
+	assert(type(server) == "string",	"bad argument, specifically 'server'")
+	assert(type(gameName) == "string",	"bad argument, specifically 'gameName'")
+	assert(type(user) == "string",		"bad argument, specifically 'user'")
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
@@ -150,7 +178,7 @@ getEnvironment = function(server, gameName, user) --returns success, environment
 		user = user,
 		response = "getEnvironment",
 	})
-	local tID = os.startTimer(timeout or 3)
+	local tID = os.startTimer(timeout or defaultTimeOut)
 	local evt, rID, freq, repfreq, msg, distance
 	while true do
 		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -167,10 +195,10 @@ getEnvironment = function(server, gameName, user) --returns success, environment
 end
 
 setEnvironment = function(server, gameName, user, environment, timeout) --returns success
-	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
-	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
-	if not (type(user) == "string") then error("bad argument, specifically 'user'") end
-	if not (type(environment) == "table") then error("bad argument, specifically 'environment'") end
+	assert(type(server) == "string",	"bad argument, specifically 'server'")
+	assert(type(gameName) == "string",	"bad argument, specifically 'gameName'")
+	assert(type(user) == "string",		"bad argument, specifically 'user'")
+	assert(type(environment) == "table",	"bad argument, specifically 'environment'")
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
@@ -181,7 +209,7 @@ setEnvironment = function(server, gameName, user, environment, timeout) --return
 		response = "setEnvironment",
 		environment = environment
 	})
-	local tID = os.startTimer(timeout or 3)
+	local tID = os.startTimer(timeout or defaultTimeOut)
 	local evt, rID, freq, repfreq, msg, distance
 	while true do
 		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -198,9 +226,9 @@ setEnvironment = function(server, gameName, user, environment, timeout) --return
 end
 
 queueEvent = function(server, gameName, eventTbl, timeout) --returns success
-	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
-	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
-	if not (type(eventTbl) == "table") then error("bad argument, specifically 'eventTbl'") end
+	assert(type(server) == "string",	"bad argument, specifically 'server'")
+	assert(type(gameName) == "string",	"bad argument, specifically 'gameName'")
+	assert(type(eventTbl) == "table",	"bad argument, specifically 'eventTbl'")
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
@@ -214,6 +242,8 @@ queueEvent = function(server, gameName, eventTbl, timeout) --returns success
 end
 
 pullEvent = function(server, gameName, eventName, timeout)
+	assert(type(server) == "string",	"bad argument, specifically 'server'")
+	assert(type(gameName) == "string",	"bad argument, specifically 'gameName'")
 	local tID
 	if tonumber(timeout) then
 		tID = os.startTimer(timeout)
@@ -236,8 +266,8 @@ pullEvent = function(server, gameName, eventName, timeout)
 end
 
 getUsers = function(server, gameName, timeout) --returns success, users
-	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
-	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
+	assert(type(server) == "string",	"bad argument, specifically 'server'")
+	assert(type(gameName) == "string",	"bad argument, specifically 'gameName'")
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
@@ -246,7 +276,7 @@ getUsers = function(server, gameName, timeout) --returns success, users
 		clientName = clientName,
 		response = "getUsers",
 	})
-	local tID = os.startTimer(timeout or 3)
+	local tID = os.startTimer(timeout or defaultTimeOut)
 	local evt, rID, freq, repfreq, msg, distance
 	while true do
 		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -263,8 +293,8 @@ getUsers = function(server, gameName, timeout) --returns success, users
 end
 
 clearGame = function(server, gameName, timeout)
-	if not (type(server) == "string") then error("bad argument, specifically 'server'") end
-	if not (type(gameName) == "string") then error("bad argument, specifically 'gameName'") end
+	assert(type(server) == "string",	"bad argument, specifically 'server'")
+	assert(type(gameName) == "string",	"bad argument, specifically 'gameName'")
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
@@ -273,7 +303,7 @@ clearGame = function(server, gameName, timeout)
 		clientName = clientName,
 		response = "clearGame",
 	})
-	local tID = os.startTimer(timeout or 3)
+	local tID = os.startTimer(timeout or defaultTimeOut)
 	local evt, rID, freq, repfreq, msg, distance
 	while true do
 		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
