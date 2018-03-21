@@ -1,4 +1,4 @@
--- neovari server
+-- NeoVariable Server
 
 local port = 262
 local id = os.getComputerID()
@@ -36,13 +36,13 @@ local getModem = function(timeout) --returns a working modem, prioritizes use of
 	end
 	for a = 1, #modems do
 		if modems[a].isWireless() then
-            modems[a].open(port)
-            modems[a].open(id)
+			modems[a].open(port)
+			modems[a].open(id)
 			return modems[a]
 		end
 	end
-    modems[1].open(port)
-    modems[1].open(id)
+	modems[1].open(port)
+	modems[1].open(id)
 	return modems[1]
 end
 
@@ -183,6 +183,27 @@ local main = function()
 								success = result
 							})
 							logadd("setVariable "..tostring(result),true)
+						end
+
+						if msg.response == "queueEvent" then
+							local response = {}
+							response.users = {}
+							response.success = false
+							if (type(msg.eventTbl) == "table") then
+								response.success = true
+							end
+							modem = getModem()
+							modem.transmit(port,port,{
+								id = id,
+								serverName = serverName,
+								gameName = msg.gameName,
+								clientName = msg.clientName,
+								clientID = msg.id,
+								response = "queueEvent_response",
+								eventTbl = msg.eventTbl,
+								success = response.success
+							})
+							logadd("queueEvent "..tostring(response.success),true)
 						end
 						
 						if msg.response == "getUsers" then
