@@ -27,9 +27,18 @@ end
 
 specifyModem = function(mod)
 	if mod == nil then
-		specifiedModem = nil
-	elseif peripheral.wrap(mod) then
-		specifiedModem = peripheral.wrap(mod)
+		specifiedModem = {}
+		return true
+	elseif type(mod) == "string" then
+		if peripheral.wrap(mod) then
+			specifiedModem = peripheral.wrap(mod)
+			specifiedModem.open(port)
+			return specifiedModem
+		else
+			return false
+		end
+	elseif type(mod) == "table" then
+		specifiedModem = mod
 		specifiedModem.open(port)
 		return specifiedModem
 	else
@@ -43,11 +52,6 @@ local getModem = function(timeout) --returns a working modem, prioritizes use of
 			return specifiedModem
 		end
 	end
---	if modem.isWireless then 
---		if modem.isWireless() ~= nil then
---			return modem
---		end
---	end
 	local modems = {peripheral.find("modem")}
 	if #modems == 0 then
 		if waitForModem(timeout or defaultTimeOut) then
