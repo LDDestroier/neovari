@@ -6,7 +6,6 @@ local port = 262
 local id = os.getComputerID()
 local clientName = "neovari-client-"..math.random(0,9999999)
 local modem = {}
-local specifiedModem = nil
 local defaultTimeOut = 1 --seconds
 
 local waitForModem = function(time)
@@ -25,10 +24,11 @@ local waitForModem = function(time)
 	end
 end
 
+local specifiedModem
+
 specifyModem = function(mod)
 	if peripheral.wrap(mod) then
 		specifiedModem = peripheral.wrap(mod)
-		modem = specifiedModem
 		modem.open(port)
 		return true
 	elseif mod == nil then
@@ -39,7 +39,7 @@ specifyModem = function(mod)
 end
 
 local getModem = function(timeout) --returns a working modem, prioritizes use of wireless modem
-	if specifiedModem then
+	if specifiedModem.isWireless then
 		if specifiedModem.isWireless() ~= nil then
 			return specifiedModem
 		end
