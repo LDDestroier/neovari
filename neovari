@@ -29,7 +29,7 @@ local specifiedModem = {}
 specifyModem = function(mod)
 	if peripheral.wrap(mod) then
 		specifiedModem = peripheral.wrap(mod)
-		modem.open(port)
+		specifiedModem.open(port)
 		return true
 	elseif mod == nil then
 		specifiedModem = nil
