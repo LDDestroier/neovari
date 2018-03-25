@@ -29,6 +29,7 @@ specifyModem = function(mod)
 	if peripheral.wrap(mod) then
 		specifiedModem = peripheral.wrap(mod)
 		modem = specifiedModem
+		modem.open(port)
 		return true
 	elseif mod == nil then
 		specifiedModem = nil
