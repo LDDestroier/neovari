@@ -38,12 +38,12 @@ specifyModem = function(mod)
 end
 
 local getModem = function(timeout) --returns a working modem, prioritizes use of wireless modem
-	if modem.open then return modem end
 	if specifiedModem then
 		if specifiedModem.isWireless() ~= nil then
 			return specifiedModem
 		end
 	end
+	if modem.open then return modem end
 	local modems = {peripheral.find("modem")}
 	if #modems == 0 then
 		if waitForModem(timeout or defaultTimeOut) then
