@@ -5,6 +5,7 @@
 local port = 262
 local id = os.getComputerID()
 local clientName = "neovari-client-"..math.random(0,9999999)
+local specifiedModem = {}
 local modem = {}
 local defaultTimeOut = 1 --seconds
 
@@ -23,8 +24,6 @@ local waitForModem = function(time)
 		end
 	end
 end
-
-local specifiedModem = {}
 
 specifyModem = function(mod)
 	if peripheral.wrap(mod) then
