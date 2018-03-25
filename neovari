@@ -24,7 +24,7 @@ local waitForModem = function(time)
 	end
 end
 
-local specifiedModem
+local specifiedModem = {}
 
 specifyModem = function(mod)
 	if peripheral.wrap(mod) then
