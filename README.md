@@ -43,6 +43,12 @@ Formatted as such:
 	}, ...
 }
 ```
+
+```
+success/modemName = neovari.specifyModem( string_or_peripheral modemPeripheral )
+```
+This locks NeoVariable to use one modem, instead of using whatever modem is handy.
+
   
 ```
 success = neovari.setVariable( string serverName, string gameName, string userName, string variableName, any variableValue )
