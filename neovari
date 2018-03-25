@@ -26,12 +26,12 @@ local waitForModem = function(time)
 end
 
 specifyModem = function(mod)
-	if peripheral.wrap(mod) then
+	if mod == nil then
+		specifiedModem = nil
+	elseif peripheral.wrap(mod) then
 		specifiedModem = peripheral.wrap(mod)
 		specifiedModem.open(port)
 		return specifiedModem
-	elseif mod == nil then
-		specifiedModem = nil
 	else
 		return false
 	end
