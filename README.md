@@ -47,7 +47,8 @@ Formatted as such:
 ```
 success/modemName = neovari.specifyModem( string_or_peripheral modemPeripheral )
 ```
-This locks NeoVariable to use one modem, instead of using whatever modem is handy.
+This locks NeoVariable to use one modem, instead of using whatever modem is handy, prioritizing wireless ones.
+If no arguments are given, NeoVariable will revert back to using whatever wireless modem is handy.
 
   
 ```
