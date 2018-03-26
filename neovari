@@ -46,6 +46,10 @@ specifyModem = function(mod)
 	end
 end
 
+getSpecifiedModem = function()
+	return specifiedModem
+end
+
 local getModem = function(timeout) --returns a working modem, prioritizes use of wireless modem
 	if specifiedModem.isWireless then
 		if specifiedModem.isWireless() ~= nil then
