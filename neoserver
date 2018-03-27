@@ -3,7 +3,7 @@
 local id = os.getComputerID()
 local serverName = "neovari-server-"..math.random(1,999999)
 local logdir = ".neolog"
-neovari.port = 262
+local port = 262
 local modem = {}
 
 local ServData = {}
