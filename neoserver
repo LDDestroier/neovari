@@ -87,11 +87,7 @@ local main = function()
 							if type(msg.varname) == "string" and type(msg.user) == "string" and ServData[msg.gameName] then
 								if ServData[msg.gameName][msg.user] then
 									response.success = true
-									if ServData[msg.gameName] then
-										if ServData[msg.gameName][msg.user] then
-											response.varval = ServData[msg.gameName][msg.user][msg.varname]
-										end
-									end
+									response.varval = ServData[msg.gameName][msg.user][msg.varname]
 								end
 							end
 							modem = getModem()
@@ -140,10 +136,14 @@ local main = function()
 							response.success = false
 							if (type(msg.user) == "string") then
 								if ServData[msg.gameName] then
-									response.success = true
 									if ServData[msg.gameName] then
-		    								for k,v in pairs(ServData[msg.gameName][msg.user]) do
-											response.varval[k] = v
+										if ServData[msg.gameName][msg.user] then
+											response.success = true
+			    							for k,v in pairs(ServData[msg.gameName][msg.user]) do
+												response.varval[k] = v
+											end
+										else
+											response.success = false
 										end
 									end
 								end
