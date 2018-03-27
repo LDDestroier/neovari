@@ -131,7 +131,7 @@ findServerList = function(timeout) --returns table with servers
 	end
 end
 
-curryServer = function(server, gameName, user, timeout)
+makeServerObject = function(server, gameName, user, timeout)
 	assert(type(server) == "string", "bad argument, specifically 'server'")
 	assert(type(gameName) == "string", "bad argument, specifically 'gameName'")
 	assert(type(user) == "string", "bad argument, specifically 'user'")
