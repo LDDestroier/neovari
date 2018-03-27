@@ -2,10 +2,10 @@
  NeoVariable API
 --]]
 
-local port = 262
 local id = os.getComputerID()
 local clientName = "neovari-client-"..math.random(0,9999999)
 local specifiedModem = {}
+port = 262
 local modem = {}
 local defaultTimeOut = 1 --seconds
 
