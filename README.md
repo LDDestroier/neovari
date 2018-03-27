@@ -50,9 +50,25 @@ success/modemName = neovari.specifyModem( string_or_peripheral modemPeripheral )
 This locks NeoVariable to use one modem, instead of using whatever modem is handy, prioritizing wireless ones.
 If no arguments are given, NeoVariable will revert back to using whatever wireless modem is handy.
 
+```
+modemName = neovari.getSpecifiedModem()
+```
+This gets the specified modem for NeoVariable to use, if one was specified.
+
+
+### Here we get into server functions:
+
+In order to do all sorts of fancy things, you need to set up a neovariable **object**.
+
+```
+object = neovariable.curryServer( string serverName, string gameName, string userName, optional_number timeout )
+```
+
+And from there...
+
   
 ```
-success = neovari.setVariable( string serverName, string gameName, string userName, string variableName, any variableValue )
+success = object.setVariable( string variableName, any variableValue, optional_string userName )
 ```
 This function sets the variable '**variableName**' inside of '**userName**' inside of '**gameName**' as '**variableName**'.
 Each variable on a NeoVariable server is stored in the following structure:
@@ -67,13 +83,13 @@ allVariables = {
 ```
 
 ```
-success, variable = neovari.getVariable( string serverName, string gameName, string userName, string variableName )```
+success, variable = object.getVariable( string variableName, optional_string userName )```
 ```
 This takes the same arguments as neovari.setVariable, except for '**variableValue**'.
 Returns the value of '**variableName**' inside of '**userName**' inside of '**gameName**'.
  
 ```
-success = neovari.setEnvironment( string serverName, string gameName, string userName, table everyVariable )```
+success = object.setEnvironment( table everyVariable, optional_string userName )```
 ```
 Sets every variable in '**serverName**' in '**gameName**' in '**userName**' to all the values in '**everyVariable**'.
 The table 'everyVariable' would be in this string-indexed table format:
@@ -86,45 +102,37 @@ The table 'everyVariable' would be in this string-indexed table format:
 ```
 
 ```
-success, environment = getEnvironment( string serverName, string gameName, string userName )```
+success, environment = getEnvironment( optional_string userName )```
 ```
 Returns every variable in '**serverName**' in '**gameName**' in '**userName**' in a string-indexed table, like the one above.
 
 ```
-success, users = neovari.getUsers( string serverName, string gameName )
+success, users = neovari.getUsers()
 ```
 Returns a numerically indexed table containing all users that have variables attached to them.
 
 ```
-success = neovari.clearVariable( string serverName, string gameName, string variableName )
+success = neovari.clearVariable( string variableName, optional_string userName )
 ```
-Sets '**variableName**' in '**gameName**' in '**serverName**' to nil.
+Sets '**variableName**' in '**userName**' in '**gameName**' in '**serverName**' to nil.
 
 ```
-success = neovari.clearUser(string serverName, string.gameName, string userName)
+success = neovari.clearUser(optional_string userName)
 ```
 Sets every variable belonging to '**userName**' to nil, effectively removing that user from '**gameName**'.
 
 ```
-success = neovari.clearGame( string serverName, string gameName )
+success = neovari.clearGame()
 ```
 Removes '**gameName**' from '**serverName**', along with any users within it.
 
 ```
-neovari.queueEvent( string serverName, string gameName, table tableOfEvents )
+neovari.queueEvent( string event1, any event2, any event3, ... )
 ```
-Sends an event + argument list to '**serverName**' for use with '**gameName**'. Format the events like this:
-```
-{
-	eventName,
-	parameter1,
-	parameter2,
-	...
-}
-```
+Sends an event + argument list to '**serverName**' for use with '**gameName**'.
 
 ```
-neovari.pullEvent( string serverName, string gameName, string eventName )
+neovari.pullEvent( optional_string eventName )
 ```
 Receives an event sent by 'neovari.queueEvent' to '**serverName**' and '**gameName**', similar to how os.pullEvent() handles it.
 Argument '**eventName**' is optional.
