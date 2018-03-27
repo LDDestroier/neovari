@@ -61,7 +61,7 @@ This gets the specified modem for NeoVariable to use, if one was specified.
 In order to do all sorts of fancy things, you need to set up a neovariable **object**.
 
 ```
-object = neovariable.curryServer( string serverName, string gameName, string userName, optional_number timeout )
+object = neovariable.makeServerObject( string serverName, string gameName, string userName, optional_number timeout )
 ```
 
 And from there...
