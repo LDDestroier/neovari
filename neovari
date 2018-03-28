@@ -314,7 +314,8 @@ end
 
 initRLWE()
 
-getKeyFromServer = function(timeout)
+getKeyFromServer = function(server, timeout)
+	assert(type(server) == "string", "bad argument, specifically 'server'")
 	local serverKey
 	local s1, publicKey = keyPair()
 	modem = getModem()
