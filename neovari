@@ -276,7 +276,7 @@ local initRLWE = function()
 		return result
 	end
 
-	local function keyPair()
+	function keyPair()
 		local s0 = sample(B)
 		local s1 = sample(B)
 		s0 = fftForward(s0)
@@ -285,7 +285,7 @@ local initRLWE = function()
 		return s1, b
 	end
 
-	local function encapsulate(b)
+	function encapsulate(b)
 		local e0 = sample(B)
 		local e1 = sample(B)
 		local e2 = sample(B)
@@ -302,7 +302,7 @@ local initRLWE = function()
 		return mu, c
 	end
 
-	local function decapsulate(s1,c)
+	function decapsulate(s1,c)
 		local v = c[1]
 		local u = c[2]
 		local w = pwMul(u,s1)
