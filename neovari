@@ -531,6 +531,14 @@ end
 initRLWE()
 initAES()
 
+local binaryToString = function(b)
+	local out = ""
+	for a = 1, #b, 8 do
+		out = out..string.char(tonumber(table.concat({ b[a],b[a+1],b[a+2],b[a+3],b[a+4],b[a+5],b[a+6],b[a+7] }),2))
+	end
+	return out
+end
+
 getKeyFromServer = function(server, timeout)
 	assert(type(server) == "string", "bad argument, specifically 'server'")
 	local serverKey
@@ -552,7 +560,7 @@ getKeyFromServer = function(server, timeout)
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
 				if (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.publicKey) == "table") and (type(msg.success) == "boolean") then
-					return decapsulate(s1, msg.publicKey)
+					return binaryToString(decapsulate(s1, msg.publicKey))
 				end
 			end
 		end
