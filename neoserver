@@ -506,7 +506,7 @@ local main = function()
 		if evt[1] == "modem_message" then
 			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
 			if type(msg) == "table" and ((freq == port) or (freq == id)) then
-				if clientKeys[msg.id] then
+				if clientKeys[msg.id] and (not msg.response) then
 					msg = decryptInput(msg.msg,clientKeys[msg.id])
 				end
 				if (type(msg)) == "table" then
