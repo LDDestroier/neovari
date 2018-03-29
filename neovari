@@ -315,6 +315,7 @@ end
 local aes = {}
 local AES128, AES192, AES256, util, OFBMODE, ECBMODE, CTRMODE, CBCMODE, CFBMODE, ciphermode
 local initAES = function() --thanks heaps, squiddev
+
 	local function e(n)
 	local s=setmetatable({},{__index=_ENV or getfenv()})if setfenv then setfenv(n,s)end;return n(s)or s end
 	local t=e(function(n,...)local s=math.floor;local h,r
@@ -388,7 +389,9 @@ local initAES = function() --thanks heaps, squiddev
 	f[M]=
 	s(a.mul(0x03,byte),0)+s(byte,1)+s(byte,2)+s(a.mul(0x02,byte),3)w[M]=s(byte,0)+s(byte,1)+s(a.mul(0x02,byte),2)+
 	s(a.mul(0x03,byte),3)y[M]=
+
 	s(byte,0)+s(a.mul(0x02,byte),1)+s(a.mul(0x03,byte),2)+s(byte,3)p[M]=
+
 	s(a.mul(0x02,byte),0)+s(a.mul(0x03,byte),1)+s(byte,2)+s(byte,3)end end
 	local function _()
 	for M=0,255 do byte=m[M]
@@ -420,6 +423,9 @@ local initAES = function() --thanks heaps, squiddev
 	W>6 and Y%W==4)then P=T(P)end;F[Y]=t.bxor(F[(Y-W)],P)end;return F end
 	local function O(M)local F=h(M,3)local W=h(M,2)local Y=h(M,1)local P=h(M,0)
 	return
+
+
+
 	s(a.add(a.add(a.add(a.mul(0x0b,W),a.mul(0x0d,Y)),a.mul(0x09,P)),a.mul(0x0e,F)),3)+
 	s(a.add(a.add(a.add(a.mul(0x0b,Y),a.mul(0x0d,P)),a.mul(0x09,F)),a.mul(0x0e,W)),2)+
 	s(a.add(a.add(a.add(a.mul(0x0b,P),a.mul(0x0d,F)),a.mul(0x09,W)),a.mul(0x0e,Y)),1)+
@@ -428,6 +434,8 @@ local initAES = function() --thanks heaps, squiddev
 	local B=t.bxor(W,F)local G=t.bxor(V,B)G=t.bxor(G,a.mul(0x08,G))
 	w=t.bxor(G,a.mul(0x04,t.bxor(Y,F)))G=t.bxor(G,a.mul(0x04,t.bxor(P,W)))
 	return
+
+
 	s(t.bxor(t.bxor(P,G),a.mul(0x02,t.bxor(F,P))),0)+s(t.bxor(t.bxor(Y,w),a.mul(0x02,V)),1)+
 	s(t.bxor(t.bxor(W,G),a.mul(0x02,t.bxor(F,P))),2)+
 	s(t.bxor(t.bxor(F,w),a.mul(0x02,B)),3)end
@@ -509,7 +517,7 @@ local initAES = function() --thanks heaps, squiddev
 	if(r>#n)then local l=""for u=1,r-#n do
 	l=l..string.char(0)end;n=n..l else n=string.sub(n,1,r)end;local d={string.byte(n,1,#n)}
 	n=ciphermode.encryptString(d,n,ciphermode.encryptCBC,h)n=string.sub(n,1,s)return{string.byte(n,1,#n)}end
-	function aes.encrypt(n,s,h,r,d)assert(n~=nil,"Empty password.")
+	function encrypt(n,s,h,r,d)assert(n~=nil,"Empty password.")
 	assert(n~=nil,"Empty data.")local r=r or CBCMODE;local h=h or AES128;local l=i(n,h,d)
 	local u=util.padByteString(s)
 	if r==ECBMODE then
@@ -518,7 +526,7 @@ local initAES = function() --thanks heaps, squiddev
 	return ciphermode.encryptString(l,u,ciphermode.encryptOFB,d)elseif r==CFBMODE then
 	return ciphermode.encryptString(l,u,ciphermode.encryptCFB,d)elseif r==CTRMODE then
 	return ciphermode.encryptString(l,u,ciphermode.encryptCTR,d)else error("Unknown mode",2)end end
-	function aes.decrypt(n,s,h,r,d)local r=r or CBCMODE;local h=h or AES128;local l=i(n,h,d)local u
+	function decrypt(n,s,h,r,d)local r=r or CBCMODE;local h=h or AES128;local l=i(n,h,d)local u
 	if r==ECBMODE then
 	u=ciphermode.decryptString(l,s,ciphermode.decryptECB,d)elseif r==CBCMODE then
 	u=ciphermode.decryptString(l,s,ciphermode.decryptCBC,d)elseif r==OFBMODE then
