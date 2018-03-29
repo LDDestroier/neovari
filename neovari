@@ -571,12 +571,15 @@ getKeyFromServer = function(server, timeout)
 	end
 end
 --local
-encTransmit = function(port,report, message, key)
+encTransmit = function(port, report, message, key)
 	if type(key) == "table" then
 		key = table.concat(key)
 	end
 	if key then
-		modem.transmit(port,report,{id = id, msg = aes.encrypt(key,textutils.serialize(message))})
+		modem.transmit(port,report,{
+			id = id,
+			msg = aes.encrypt(key,textutils.serialize(message))
+		})
 	else
 		modem.transmit(port,report,message)
 	end
