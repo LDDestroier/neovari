@@ -576,7 +576,7 @@ encTransmit = function(port,report, message, key)
 		key = table.concat(key)
 	end
 	if key then
-		modem.transmit(port,report,aes.encrypt(key,textutils.serialize(message)))
+		modem.transmit(port,report,{id = id, msg = aes.encrypt(key,textutils.serialize(message))})
 	else
 		modem.transmit(port,report,message)
 	end
