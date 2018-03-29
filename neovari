@@ -313,6 +313,7 @@ local initRLWE = function()
 end
 
 local aes = {}
+local AES128, AES192, AES256, util, OFBMODE, ECBMODE, CTRMODE, CBCMODE, CFBMODE, ciphermode
 local initAES = function() --thanks heaps, squiddev
 	local function e(n)
 	local s=setmetatable({},{__index=_ENV or getfenv()})if setfenv then setfenv(n,s)end;return n(s)or s end
