@@ -576,38 +576,17 @@ encTransmit = function(port,report, message, key)
 		key = table.concat(key)
 	end
 	if key then
-		local outsend = {}
-		if type(message) == "table" then
-			for k,v in pairs(message) do
-				if (k == "id") or (not v) then
-					outsend[k] = v
-				else
-					outsend[k] = aes.encrypt(key,v)
-				end
-			end
-		else
-			outsend = message
-		end
-		modem.transmit(port,report,outsend)
+		modem.transmit(port,report,aes.encrypt(key,textutils.serialize(message)))
 	else
 		modem.transmit(port,report,message)
 	end
 end
 
 local decryptInput = function(input, key)
-	assert(type(input) == "table", "input must be table!")
 	if type(key) == "table" then
 		key = table.concat(key)
 	end
-	local output = {}
-	for k,v in pairs(input) do
-		if (k == "id") or (not v) then
-			output[k] = v
-		else
-			output[k] = aes.decrypt(key, v)
-		end
-	end
-	return output
+	return textutils.unserialize(aes.decrypt(key,input))
 end
 
 connectToServer = function(server, enckey, gameName, user, timeout)
@@ -639,8 +618,8 @@ connectToServer = function(server, enckey, gameName, user, timeout)
 				if evt == "timer" and rID == tID then
 					return false
 				elseif evt == "modem_message" then
+					msg = decryptInput(msg, enckey)
 					if (freq == id) and (type(msg) == "table") then
-						msg = decryptInput(msg, enckey)
 						if (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "getVariable_response") and (msg.varname == variableName) and (msg.user == username) and (type(msg.success) == "boolean") then
 							return msg.success, msg.varval
 						end
@@ -672,8 +651,8 @@ connectToServer = function(server, enckey, gameName, user, timeout)
 				if evt == "timer" and rID == tID then
 					return false
 				elseif evt == "modem_message" then
+					msg = decryptInput(msg, enckey)
 					if (freq == id) and (type(msg) == "table") then
-						msg = decryptInput(msg, enckey)
 						if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "setVariable_response") and (msg.varname == variableName) and (msg.user == username) and (type(msg.success) == "boolean") then
 							return msg.success
 						end
@@ -701,8 +680,8 @@ connectToServer = function(server, enckey, gameName, user, timeout)
 				if evt == "timer" and rID == tID then
 					return false
 				elseif evt == "modem_message" then
+					msg = decryptInput(msg, enckey)
 					if (freq == id) and (type(msg) == "table") then
-						msg = decryptInput(msg, enckey)
 						if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "getEnvironment_response") and (msg.user == username) and (type(msg.success) == "boolean") and (type(msg.environment) == "table") then
 							return msg.success, msg.environment
 						end
@@ -732,8 +711,8 @@ connectToServer = function(server, enckey, gameName, user, timeout)
 				if evt == "timer" and rID == tID then
 					return false
 				elseif evt == "modem_message" then
+					msg = decryptInput(msg, enckey)
 					if (freq == id) and (type(msg) == "table") then
-						msg = decryptInput(msg, enckey)
 						if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "setEnvironment_response") and (msg.user == username) and (type(msg.success) == "boolean") then
 							return msg.success
 						end
@@ -773,8 +752,8 @@ connectToServer = function(server, enckey, gameName, user, timeout)
 				if evt == "timer" and rID == tID then
 					return nil
 				elseif evt == "modem_message" then
+					msg = decryptInput(msg, enckey)
 					if (type(msg) == "table") then
-						msg = decryptInput(msg, enckey)
 						if (msg.serverName == server) and (msg.gameName == gameName) and (msg.response == "queueEvent_response") and (type(msg.eventTbl) == "table") and (type(msg.success) == "boolean") then
 							if (not eventName) or (msg.eventTbl[1] == eventName) then
 								return table.unpack(msg.eventTbl)
@@ -802,8 +781,8 @@ connectToServer = function(server, enckey, gameName, user, timeout)
 				if evt == "timer" and rID == tID then
 					return false
 				elseif evt == "modem_message" then
+					msg = decryptInput(msg, enckey)
 					if (freq == id) and (type(msg) == "table") then
-						msg = decryptInput(msg, enckey)
 						if (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "getUsers_response") and (type(msg.users) == "table") and (type(msg.success) == "boolean") then
 							return msg.success, msg.users
 						end
@@ -829,8 +808,8 @@ connectToServer = function(server, enckey, gameName, user, timeout)
 				if evt == "timer" and rID == tID then
 					return false
 				elseif evt == "modem_message" then
+					msg = decryptInput(msg, enckey)
 					if (freq == id) and (type(msg) == "table") then
-						msg = decryptInput(msg, enckey)
 						if (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "clearGame_response") and (type(msg.success) == "boolean") then
 							return msg.success
 						end
