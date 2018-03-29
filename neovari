@@ -580,7 +580,7 @@ local encTransmit = function(port,report, message, key)
 		key = table.concat(key)
 	end
 	if key then
-		local outsend
+		local outsend = {}
 		if type(message) == "table" then
 			for k,v in pairs(message) do
 				if (k == id) or (not v) then
