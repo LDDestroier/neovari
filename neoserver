@@ -680,34 +680,34 @@ local main = function()
 									logadd("clearGame "..tostring(result),true)
 								end
 							end
-						else
-							if msg.response == "lookup" then
+						end
+					else
+						if msg.response == "lookup" then
+							modem = getModem()
+							modem.transmit(msg.id,port,{
+								id = id,
+								serverName = serverName,
+--								clientName = msg.clientName,
+								response = "lookup_response",
+							})
+							logadd("lookup from ID: "..msg.id,true)
+						elseif msg.response == "rlwe_connect" then
+							if type(msg.publicKey) == "table" then
+								local mu, publicKey = encapsulate(msg.publicKey)
 								modem = getModem()
 								modem.transmit(msg.id,port,{
 									id = id,
 									serverName = serverName,
-	--								clientName = msg.clientName,
-									response = "lookup_response",
+--									clientName = msg.clientName,
+									response = "rlwe_connect_response",
+									publicKey = publicKey,
+									success = true,
 								})
-								logadd("lookup from ID: "..msg.id,true)
-							elseif msg.response == "rlwe_connect" then
-								if type(msg.publicKey) == "table" then
-									local mu, publicKey = encapsulate(msg.publicKey)
-									modem = getModem()
-									modem.transmit(msg.id,port,{
-										id = id,
-										serverName = serverName,
-	--									clientName = msg.clientName,
-										response = "rlwe_connect_response",
-										publicKey = publicKey,
-										success = true,
-									})
-									--mu = binaryToString(mu)
-									mu = table.concat(mu)
-									clientKeys[msg.id] = mu
-									logadd("RLWE connection from ID: "..msg.id,true)
-								end
-	end
+								--mu = binaryToString(mu)
+								mu = table.concat(mu)
+								clientKeys[msg.id] = mu
+								logadd("RLWE connection from ID: "..msg.id,true)
+							end
 						end
 					end
 				end
