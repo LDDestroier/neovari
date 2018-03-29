@@ -346,7 +346,7 @@ connectToServer = function(server, gameName, user, timeout)
 	assert(type(server) == "string", "bad argument, specifically 'server'")
 	assert(type(gameName) == "string", "bad argument, specifically 'gameName'")
 	assert(type(user) == "string", "bad argument, specifically 'user'")
-	
+	timeout = timeout or defaultTimeOut
 	return {
 		getVariable = function(variableName, username) --returns success, value
 			username = username or user
@@ -362,7 +362,7 @@ connectToServer = function(server, gameName, user, timeout)
 				response = "getVariable",
 				varname = variableName
 			})
-			local tID = os.startTimer(timeout or defaultTimeOut)
+			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
 				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -393,7 +393,7 @@ connectToServer = function(server, gameName, user, timeout)
 				varname = variableName,
 				varval = variableValue
 			})
-			local tID = os.startTimer(timeout or defaultTimeOut)
+			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
 				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -420,7 +420,7 @@ connectToServer = function(server, gameName, user, timeout)
 				user = username,
 				response = "getEnvironment",
 			})
-			local tID = os.startTimer(timeout or defaultTimeOut)
+			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
 				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -449,7 +449,7 @@ connectToServer = function(server, gameName, user, timeout)
 				response = "setEnvironment",
 				environment = environment
 			})
-			local tID = os.startTimer(timeout or defaultTimeOut)
+			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
 				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -514,7 +514,7 @@ connectToServer = function(server, gameName, user, timeout)
 				clientName = clientName,
 				response = "getUsers",
 			})
-			local tID = os.startTimer(timeout or defaultTimeOut)
+			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
 				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
@@ -539,7 +539,7 @@ connectToServer = function(server, gameName, user, timeout)
 				clientName = clientName,
 				response = "clearGame",
 			})
-			local tID = os.startTimer(timeout or defaultTimeOut)
+			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
 				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
