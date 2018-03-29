@@ -359,7 +359,8 @@ getKeyFromServer = function(server, timeout)
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
 				if (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.publicKey) == "table") and (type(msg.success) == "boolean") then
-					return binaryToString(decapsulate(s1, msg.publicKey))
+					--return binaryToString(decapsulate(s1, msg.publicKey))
+					return table.concat(decapsulate(s1, msg.publicKey))
 				end
 			end
 		end
