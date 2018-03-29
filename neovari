@@ -582,7 +582,7 @@ local encTransmit = function(port,report, message, key)
 				if (k == id) or (not v) then
 					outsend[k] = v
 				else
-					outsend[k] = aes.encrypt(key,v,513)
+					outsend[k] = aes.encrypt(key,v)
 				end
 			end
 		else
