@@ -473,43 +473,22 @@ end
 initAES()
 initRLWE()
 
-local encTransmit = function(port,report, message, key)
+encTransmit = function(port,report, message, key)
 	if type(key) == "table" then
 		key = table.concat(key)
 	end
 	if key then
-		local outsend = {}
-		if type(message) == "table" then
-			for k,v in pairs(message) do
-				if (k == id) or (not v) then
-					outsend[k] = v
-				else
-					outsend[k] = aes.encrypt(key,v)
-				end
-			end
-		else
-			outsend = message
-		end
-		modem.transmit(port,report,outsend)
+		modem.transmit(port,report,aes.encrypt(key,textutils.serialize(message)))
 	else
 		modem.transmit(port,report,message)
 	end
 end
 
 local decryptInput = function(input, key)
-	assert(type(input) == "table", "input must be table!")
 	if type(key) == "table" then
 		key = table.concat(key)
 	end
-	local output = {}
-	for k,v in pairs(input) do
-		if (k == "id") or (not v) then
-			output[k] = v
-		else
-			output[k] = aes.decrypt(key, v)
-		end
-	end
-	return output
+	return textutils.unserialize(aes.decrypt(key,input))
 end
 
 local binaryToString = function(b)
@@ -527,11 +506,12 @@ local main = function()
 		if evt[1] == "modem_message" then
 			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
 			if type(msg) == "table" and ((freq == port) or (freq == id)) then
-				if (type(msg.id) == "string" or type(msg.id) == "number") and (type(msg.response) == "string") then
-					
-					if (type(msg.gameName) == "string") then
+				if clientKeys[msg.id] then
+					msg = decryptInput(msg.msg,clientKeys[msg.id])
+				end
+				if (type(msg)) == "table" then
+					if (type(msg.gameName) == "string") and (type(msg.response) == "string") then
 						if clientKeys[msg.id] then
-							msg = decryptInput(msg,clientKeys[msg.id])
 							if msg.serverName == serverName then
 								if msg.response == "getVariable" then
 									local response = {}
@@ -700,35 +680,35 @@ local main = function()
 									logadd("clearGame "..tostring(result),true)
 								end
 							end
-						end
-					else
-						if msg.response == "lookup" then
-							modem = getModem()
-							modem.transmit(msg.id,port,{
-								id = id,
-								serverName = serverName,
---								clientName = msg.clientName,
-								response = "lookup_response",
-							})
-							logadd("lookup from ID: "..msg.id,true)
-						elseif msg.response == "rlwe_connect" then
-							if type(msg.publicKey) == "table" then
-								local mu, publicKey = encapsulate(msg.publicKey)
+						else
+							if msg.response == "lookup" then
 								modem = getModem()
 								modem.transmit(msg.id,port,{
 									id = id,
 									serverName = serverName,
---									clientName = msg.clientName,
-									response = "rlwe_connect_response",
-									publicKey = publicKey,
-									success = true,
+	--								clientName = msg.clientName,
+									response = "lookup_response",
 								})
-								--mu = binaryToString(mu)
-								mu = table.concat(mu)
-								clientKeys[msg.id] = mu
-								logadd("RLWE connection from ID: "..msg.id,true)
-							end
-end
+								logadd("lookup from ID: "..msg.id,true)
+							elseif msg.response == "rlwe_connect" then
+								if type(msg.publicKey) == "table" then
+									local mu, publicKey = encapsulate(msg.publicKey)
+									modem = getModem()
+									modem.transmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+	--									clientName = msg.clientName,
+										response = "rlwe_connect_response",
+										publicKey = publicKey,
+										success = true,
+									})
+									--mu = binaryToString(mu)
+									mu = table.concat(mu)
+									clientKeys[msg.id] = mu
+									logadd("RLWE connection from ID: "..msg.id,true)
+								end
+	end
+						end
 					end
 				end
 			end
