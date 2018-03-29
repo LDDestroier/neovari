@@ -315,7 +315,6 @@ end
 local aes = {}
 local AES128, AES192, AES256, util, OFBMODE, ECBMODE, CTRMODE, CBCMODE, CFBMODE, ciphermode
 local initAES = function() --thanks heaps, squiddev
-
 	local function e(n)
 	local s=setmetatable({},{__index=_ENV or getfenv()})if setfenv then setfenv(n,s)end;return n(s)or s end
 	local t=e(function(n,...)local s=math.floor;local h,r
@@ -332,47 +331,45 @@ local initAES = function() --thanks heaps, squiddev
 	local function b()for k=1,r do print("exp(",k-1,")=",u[k-1])end end;local function g()local k=1
 	for q=0,d-1 do u[q]=k;c[k]=q;k=s(h(k,1),k)if k>d then k=f(k,l)end end end;g()return
 	{add=m,sub=f,invert=w,mul=y,div=dib,printLog=v,printExp=b}end)
-	util=e(function(n,...)local s=t.bxor;local h=t.rshift;local r=t.band;local d=t.lshift;local l;local function u(O)O=s(O,h(O,4))
-	O=s(O,h(O,2))O=s(O,h(O,1))return r(O,1)end
-	local function c(O,I)if(I==0)then return
-	r(O,0xff)else return r(h(O,I*8),0xff)end end;local function m(O,I)
-	if(I==0)then return r(O,0xff)else return d(r(O,0xff),I*8)end end
-	local function f(O,I,N)local S={}
-	for H=0,N-1 do
-	S[H+1]=
-	m(O[I+ (H*4)],3)+m(O[I+ (H*4)+1],2)+
-	m(O[I+ (H*4)+2],1)+m(O[I+ (H*4)+3],0)if N%10000 ==0 then l()end end;return S end;local function w(O,I,N,S)S=S or#O;for H=0,S-1 do
-	for R=0,3 do I[N+H*4+ (3-R)]=c(O[H+1],R)end;if S%10000 ==0 then l()end end
-	return I end;local function y(O)local I=""
-	for N,S in
-	ipairs(O)do I=I..string.format("%02x ",S)end;return I end
-	local function p(O)local I={}for N=1,#O,2 do I[#I+1]=tonumber(O:sub(N,
-	N+1),16)end;return I end
-	local function v(O)local I=type(O)
-	if(I=="number")then return string.format("%08x",O)elseif
-	(I=="table")then return y(O)elseif(I=="string")then local N={string.byte(O,1,#O)}
-	return y(N)else return O end end
-	local function b(O)local I=#O;local N=math.random(0,255)local S=math.random(0,255)
-	local H=string.char(N,S,N,S,c(I,3),c(I,2),c(I,1),c(I,0))O=H..O;local R=math.ceil(#O/16)*16-#O;local D=""for L=1,R do D=D..
-	string.char(math.random(0,255))end;return O..D end
-	local function g(O)local I={string.byte(O,1,4)}if
-	(I[1]==I[3]and I[2]==I[4])then return true end;return false end
-	local function k(O)if(not g(O))then return nil end
-	local I=
-	m(string.byte(O,5),3)+
-	m(string.byte(O,6),2)+m(string.byte(O,7),1)+m(string.byte(O,8),0)return string.sub(O,9,8+I)end;local function q(O,I)for N=1,16 do O[N]=s(O[N],I[N])end end
-	local function j(O)
-	local I=16;while true do local N=O[I]+1
-	if N>=256 then O[I]=N-256;I=(I-2)%16+1 else O[I]=N;break end end end;local x,z,_=os.queueEvent,coroutine.yield,os.time;local E=_()
-	local function l()local O=_()if O-E>=0.03 then E=O
-	x("sleep")z("sleep")end end
-	local function T(O)local I,N,S,H=string.char,math.random,l,table.insert;local R={}for D=1,O do
-	H(R,N(0,255))if D%10240 ==0 then S()end end;return R end
-	local function A(O)local I,N,S,H=string.char,math.random,l,table.insert;local R={}for D=1,O do
-	H(R,I(N(0,255)))if D%10240 ==0 then S()end end
-	return table.concat(R)end
+	util=e(function(n,...)local s=t.bxor;local h=t.rshift;local r=t.band;local d=t.lshift;local l;local function u(A)A=s(A,h(A,4))
+	A=s(A,h(A,2))A=s(A,h(A,1))return r(A,1)end
+	local function c(A,O)if(O==0)then return
+	r(A,0xff)else return r(h(A,O*8),0xff)end end;local function m(A,O)
+	if(O==0)then return r(A,0xff)else return d(r(A,0xff),O*8)end end
+	local function f(A,O,I)local N={}
+	for S=0,I-1 do
+	N[S+1]=
+	m(A[O+ (S*4)],3)+m(A[O+ (S*4)+1],2)+
+	m(A[O+ (S*4)+2],1)+m(A[O+ (S*4)+3],0)if I%10000 ==0 then l()end end;return N end;local function w(A,O,I,N)N=N or#A;for S=0,N-1 do
+	for H=0,3 do O[I+S*4+ (3-H)]=c(A[S+1],H)end;if N%10000 ==0 then l()end end
+	return O end;local function y(A)local O=""
+	for I,N in
+	ipairs(A)do O=O..string.format("%02x ",N)end;return O end
+	local function p(A)local O={}for I=1,#A,2 do O[#O+1]=tonumber(A:sub(I,
+	I+1),16)end;return O end
+	local function v(A)local O=type(A)
+	if(O=="number")then return string.format("%08x",A)elseif
+	(O=="table")then return y(A)elseif(O=="string")then local I={string.byte(A,1,#A)}
+	return y(I)else return A end end
+	local function b(A)local O=#A;local I=math.random(0,255)local N=math.random(0,255)
+	local S=string.char(I,N,I,N,c(O,3),c(O,2),c(O,1),c(O,0))A=S..A;local H=math.ceil(#A/16)*16-#A;local R=""for D=1,H do R=R..
+	string.char(math.random(0,255))end;return A..R end
+	local function g(A)local O={string.byte(A,1,4)}if
+	(O[1]==O[3]and O[2]==O[4])then return true end;return false end
+	local function k(A)if(not g(A))then return nil end
+	local O=
+	m(string.byte(A,5),3)+
+	m(string.byte(A,6),2)+m(string.byte(A,7),1)+m(string.byte(A,8),0)return string.sub(A,9,8+O)end;local function q(A,O)for I=1,16 do A[I]=s(A[I],O[I])end end
+	local j,x,z=os.queueEvent,coroutine.yield,os.time;local _=z()local function l()local A=z()
+	if A-_>=0.03 then _=A;j("sleep")x("sleep")end end
+	local function E(A)
+	local O,I,N,S=string.char,math.random,l,table.insert;local H={}
+	for R=1,A do S(H,I(0,255))if R%10240 ==0 then N()end end;return H end
+	local function T(A)local O,I,N,S=string.char,math.random,l,table.insert;local H={}for R=1,A do
+	S(H,O(I(0,255)))if R%10240 ==0 then N()end end
+	return table.concat(H)end
 	return
-	{byteParity=u,getByte=c,putByte=m,bytesToInts=f,intsToBytes=w,bytesToHex=y,hexToBytes=p,toHexString=v,padByteString=b,properlyDecrypted=g,unpadByteString=k,xorIV=q,increment=j,sleepCheckIn=l,getRandomData=T,getRandomString=A}end)
+	{byteParity=u,getByte=c,putByte=m,bytesToInts=f,intsToBytes=w,bytesToHex=y,hexToBytes=p,toHexString=v,padByteString=b,properlyDecrypted=g,unpadByteString=k,xorIV=q,sleepCheckIn=l,getRandomData=E,getRandomString=T}end)
 	aes=e(function(n,...)local s=util.putByte;local h=util.getByte;local r='rounds'local d="type"local l=1;local u=2
 	local c={}local m={}local f={}local w={}local y={}local p={}local v={}local b={}local g={}local k={}
 	local q={0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,0xab000000,0x4d000000,0x9a000000,0x2f000000}
@@ -495,13 +492,10 @@ local initAES = function() --thanks heaps, squiddev
 	util.xorIV(d,l)aes.encrypt(r,d,1,d,1)return d end;function s.encryptOFB(r,d,l)
 	aes.encrypt(r,l,1,l,1)util.xorIV(d,l)return l end;function s.encryptCFB(r,d,l)
 	aes.encrypt(r,l,1,l,1)util.xorIV(d,l)return d end
-	function s.encryptCTR(r,d,l)
-	local u={}for c=1,16 do u[c]=l[c]end;aes.encrypt(r,l,1,l,1)
-	util.xorIV(d,l)util.increment(u)return u end
-	function s.decryptString(r,d,l,u)if u then local f={}for w=1,16 do f[w]=u[w]end;u=f else
-	u={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}end;local c
-	if l==s.decryptOFB or
-	l==s.decryptCFB or l==s.decryptCTR then
+	function s.decryptString(r,d,l,u)
+	if u then
+	local f={}for w=1,16 do f[w]=u[w]end;u=f else u={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}end;local c
+	if(l==s.decryptOFB or l==s.decryptCFB)then
 	c=aes.expandEncryptionKey(r)else c=aes.expandDecryptionKey(r)end;local m=o.new()for f=1,#d/16 do local w=(f-1)*16+1
 	local y={string.byte(d,w,w+15)}u=l(c,y,u)
 	o.addString(m,string.char(unpack(y)))end
@@ -510,29 +504,26 @@ local initAES = function() --thanks heaps, squiddev
 	util.xorIV(d,l)return u end;function s.decryptOFB(r,d,l)
 	aes.encrypt(r,l,1,l,1)util.xorIV(d,l)return l end;function s.decryptCFB(r,d,l)
 	local u={}for c=1,16 do u[c]=d[c]end;aes.encrypt(r,l,1,l,1)
-	util.xorIV(d,l)return u end
-	s.decryptCTR=s.encryptCTR;return s end)AES128=16;AES192=24;AES256=32;ECBMODE=1;CBCMODE=2;OFBMODE=3;CFBMODE=4;CTRMODE=4
-	local function i(n,s,h)local r=s;if(s==
-	AES192)then r=32 end
-	if(r>#n)then local l=""for u=1,r-#n do
-	l=l..string.char(0)end;n=n..l else n=string.sub(n,1,r)end;local d={string.byte(n,1,#n)}
+	util.xorIV(d,l)return u end;return s end)AES128=16;AES192=24;AES256=32;ECBMODE=1;CBCMODE=2;OFBMODE=3;CFBMODE=4
+	local function i(n,s,h)local r=s;if
+	(s==AES192)then r=32 end
+	if(r>#n)then local l=""
+	for u=1,r-#n do l=l..string.char(0)end;n=n..l else n=string.sub(n,1,r)end;local d={string.byte(n,1,#n)}
 	n=ciphermode.encryptString(d,n,ciphermode.encryptCBC,h)n=string.sub(n,1,s)return{string.byte(n,1,#n)}end
-	function encrypt(n,s,h,r,d)assert(n~=nil,"Empty password.")
+	function aes.encrypt(n,s,h,r,d)assert(n~=nil,"Empty password.")
 	assert(n~=nil,"Empty data.")local r=r or CBCMODE;local h=h or AES128;local l=i(n,h,d)
 	local u=util.padByteString(s)
-	if r==ECBMODE then
-	return ciphermode.encryptString(l,u,ciphermode.encryptECB,d)elseif r==CBCMODE then
-	return ciphermode.encryptString(l,u,ciphermode.encryptCBC,d)elseif r==OFBMODE then
-	return ciphermode.encryptString(l,u,ciphermode.encryptOFB,d)elseif r==CFBMODE then
-	return ciphermode.encryptString(l,u,ciphermode.encryptCFB,d)elseif r==CTRMODE then
-	return ciphermode.encryptString(l,u,ciphermode.encryptCTR,d)else error("Unknown mode",2)end end
-	function decrypt(n,s,h,r,d)local r=r or CBCMODE;local h=h or AES128;local l=i(n,h,d)local u
-	if r==ECBMODE then
-	u=ciphermode.decryptString(l,s,ciphermode.decryptECB,d)elseif r==CBCMODE then
-	u=ciphermode.decryptString(l,s,ciphermode.decryptCBC,d)elseif r==OFBMODE then
-	u=ciphermode.decryptString(l,s,ciphermode.decryptOFB,d)elseif r==CFBMODE then
-	u=ciphermode.decryptString(l,s,ciphermode.decryptCFB,d)elseif r==CTRMODE then
-	u=ciphermode.decryptString(l,s,ciphermode.decryptCTR,d)else error("Unknown mode",2)end;result=util.unpadByteString(u)
+	if(r==ECBMODE)then return
+	ciphermode.encryptString(l,u,ciphermode.encryptECB,d)elseif(r==CBCMODE)then return
+	ciphermode.encryptString(l,u,ciphermode.encryptCBC,d)elseif(r==OFBMODE)then return
+	ciphermode.encryptString(l,u,ciphermode.encryptOFB,d)elseif(r==CFBMODE)then return
+	ciphermode.encryptString(l,u,ciphermode.encryptCFB,d)else return nil end end
+	function aes.decrypt(n,s,h,r,d)local r=r or CBCMODE;local h=h or AES128;local l=i(n,h,d)local u
+	if(r==ECBMODE)then
+	u=ciphermode.decryptString(l,s,ciphermode.decryptECB,d)elseif(r==CBCMODE)then
+	u=ciphermode.decryptString(l,s,ciphermode.decryptCBC,d)elseif(r==OFBMODE)then
+	u=ciphermode.decryptString(l,s,ciphermode.decryptOFB,d)elseif(r==CFBMODE)then
+	u=ciphermode.decryptString(l,s,ciphermode.decryptCFB,d)end;result=util.unpadByteString(u)
 	if(result==nil)then return nil end;return result end
 end
 
