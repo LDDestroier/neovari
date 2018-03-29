@@ -567,7 +567,7 @@ local encTransmit = function(port,report, message, key)
 		local outsend
 		if type(message) == "table" then
 			for k,v in pairs(message) do
-				if k == id then
+				if (k == id) or (not v) then
 					outsend[k] = v
 				else
 					outsend[k] = aes.encrypt(key,v)
@@ -589,7 +589,7 @@ local decryptInput = function(input, key)
 	end
 	local output = {}
 	for k,v in pairs(input) do
-		if k == "id" then
+		if (k == "id") or (not v) then
 			output[k] = v
 		else
 			output[k] = aes.decrypt(key, v)
