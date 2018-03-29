@@ -1566,13 +1566,13 @@ local encTransmit = function(port,report, message, key)
 				if (k == id) or (not v) then
 					outsend[k] = v
 				else
-					outsend[k] = aes.encrypt(key,v)
+					outsend[k] = aes.encrypt(key,v,513)
 				end
 			end
 		else
 			outsend = message
 		end
-		modem.transmit(port,report,aes.encrypt(key, textutils.serialize(outsend)))
+		modem.transmit(port,report,aes.encrypt(key, textutils.serialize(outsend), 513))
 	else
 		modem.transmit(port,report,message)
 	end
