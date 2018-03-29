@@ -328,12 +328,15 @@ getKeyFromServer = function(server, timeout)
 	})
 	local tID = os.startTimer(timeout or defaultTimeOut)
 	local evt, rID, freq, repfreq, msg, distance
-	if evt == "timer" and rID == tID then
-		return false
-	elseif evt == "modem_message" then
-		if (freq == id) and (type(msg) == "table") then
-			if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.success) == "boolean") then
-				return decapsulate(s1, msg.publicKey)
+	while true do
+		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
+		if evt == "timer" and rID == tID then
+			return false
+		elseif evt == "modem_message" then
+			if (freq == id) and (type(msg) == "table") then
+				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.success) == "boolean") then
+					return decapsulate(s1, msg.publicKey)
+				end
 			end
 		end
 	end
