@@ -570,8 +570,8 @@ getKeyFromServer = function(server, timeout)
 		end
 	end
 end
-
-local encTransmit = function(port,report, message, key)
+--local
+encTransmit = function(port,report, message, key)
 	if type(key) == "table" then
 		key = table.concat(key)
 	end
@@ -579,7 +579,7 @@ local encTransmit = function(port,report, message, key)
 		local outsend = {}
 		if type(message) == "table" then
 			for k,v in pairs(message) do
-				if (k == id) or (not v) then
+				if (k == "id") or (not v) then
 					outsend[k] = v
 				else
 					outsend[k] = aes.encrypt(key,v)
