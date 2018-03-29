@@ -1,10 +1,13 @@
--- NeoVariable Server
+--[[
+NeoVariable Server
+--]]
 
 local id = os.getComputerID()
 local serverName = "neovari-server-"..math.random(1,999999)
 local logdir = ".neolog"
 local port = 262
 local modem = {}
+local clientKeys = {}
 
 local ServData = {}
 
@@ -62,12 +65,463 @@ end
 
 local logadd = function(text,display)
 	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..(text or "Invalid Log Entry")
-	--[[
-	local file = fs.open(logdir,"a")
+--[[	local file = fs.open(logdir,"a")
 	file.writeLine(line)
-	file.close()
-	--]]
+	file.close()	--]]
 	if display then print(line) end
+end
+
+local keyPair, encapsulate, decapsulate
+local initRLWE = function()
+	local N = 512
+	local q = 25601
+	local w = {1,114,12996,22287,6219,17739,25368,24640,18451,4132,10230,14175,3087,19105,1885,10082,22904,25355,23158,3109,21613,6186,13977,6116,5997,18032,7568,17919,20287,8628,10754,22709,3125,23437,9314,12155,3216,8210,14304,17793,5923,9596,18702,7145,20899,1593,2395,17020,20205,24881,20324,12846,5187,2495,2819,14154,693,2199,20277,7488,8799,4647,17738,25254,11644,21765,23514,18092,14408,4048,654,23354,25453,8729,22268,4053,1224,11531,8883,14223,8559,2888,22020,1382,3942,14171,2631,18323,15141,10807,3150,686,1401,6108,5085,16468,8479,19369,6380,10492,18442,3106,21271,18400,23919,13060,3982,18731,10451,13768,7891,3539,19431,13448,22613,17782,4669,20246,3954,15539,4977,4156,12966,18867,354,14755,18005,4490,25441,7361,19922,18220,3399,3471,11679,154,17556,4506,1664,10489,18100,15320,5612,25344,21904,13759,6865,14580,23656,8679,16568,19879,13318,7793,17968,272,5407,1974,20228,1902,12020,13427,20219,876,23061,17652,15450,20432,25158,700,2997,8845,9891,1130,815,16107,18527,12796,25088,18321,14913,10416,9778,13849,17125,6574,7007,5167,215,24510,3631,4318,5833,24937,1107,23794,24411,17946,23365,1106,23680,11415,21260,17146,8968,23913,12376,2809,13014,24339,9738,9289,9305,11129,14257,12435,9535,11748,8020,18245,6249,21159,5632,2023,213,24282,3240,10946,18996,15060,1573,115,13110,9682,2905,23958,17506,24407,17490,22583,14362,24405,17262,22192,20990,11967,7385,22658,22912,666,24722,2198,20163,20093,12113,24029,25600,25487,12605,3314,19382,7862,233,961,7150,21469,15371,11426,22514,6496,23716,15519,2697,246,2443,22492,3988,19415,11624,19485,19604,7569,18033,7682,5314,16973,14847,2892,22476,2164,16287,13446,22385,17391,11297,7808,19678,16005,6899,18456,4702,24008,23206,8581,5396,720,5277,12755,20414,23106,22782,11447,24908,23402,5324,18113,16802,20954,7863,347,13957,3836,2087,7509,11193,21553,24947,2247,148,16872,3333,21548,24377,14070,16718,11378,17042,22713,3581,24219,21659,11430,22970,7278,10460,14794,22451,24915,24200,19493,20516,9133,17122,6232,19221,15109,7159,22495,4330,7201,1682,12541,21619,6870,15150,11833,17710,22062,6170,12153,2988,7819,20932,5355,21647,10062,20624,21445,12635,6734,25247,10846,7596,21111,160,18240,5679,7381,22202,22130,13922,25447,8045,21095,23937,15112,7501,10281,19989,257,3697,11842,18736,11021,1945,16922,9033,5722,12283,17808,7633,25329,20194,23627,5373,23699,13581,12174,5382,24725,2540,7949,10151,5169,443,24901,22604,16756,15710,24471,24786,9494,7074,12805,513,7280,10688,15185,15823,11752,8476,19027,18594,20434,25386,1091,21970,21283,19768,664,24494,1807,1190,7655,2236,24495,1921,14186,4341,8455,16633,1688,13225,22792,12587,1262,15863,16312,16296,14472,11344,13166,16066,13853,17581,7356,19352,4442,19969,23578,25388,1319,22361,14655,6605,10541,24028,25486,12491,15919,22696,1643,8095,1194,8111,3018,11239,1196,8339,3409,4611,13634,18216,2943,2689,24935,879,23403,5438,5508,13488,1572}
+	local wrev = {1,1572,13488,5508,5438,23403,879,24935,2689,2943,18216,13634,4611,3409,8339,1196,11239,3018,8111,1194,8095,1643,22696,15919,12491,25486,24028,10541,6605,14655,22361,1319,25388,23578,19969,4442,19352,7356,17581,13853,16066,13166,11344,14472,16296,16312,15863,1262,12587,22792,13225,1688,16633,8455,4341,14186,1921,24495,2236,7655,1190,1807,24494,664,19768,21283,21970,1091,25386,20434,18594,19027,8476,11752,15823,15185,10688,7280,513,12805,7074,9494,24786,24471,15710,16756,22604,24901,443,5169,10151,7949,2540,24725,5382,12174,13581,23699,5373,23627,20194,25329,7633,17808,12283,5722,9033,16922,1945,11021,18736,11842,3697,257,19989,10281,7501,15112,23937,21095,8045,25447,13922,22130,22202,7381,5679,18240,160,21111,7596,10846,25247,6734,12635,21445,20624,10062,21647,5355,20932,7819,2988,12153,6170,22062,17710,11833,15150,6870,21619,12541,1682,7201,4330,22495,7159,15109,19221,6232,17122,9133,20516,19493,24200,24915,22451,14794,10460,7278,22970,11430,21659,24219,3581,22713,17042,11378,16718,14070,24377,21548,3333,16872,148,2247,24947,21553,11193,7509,2087,3836,13957,347,7863,20954,16802,18113,5324,23402,24908,11447,22782,23106,20414,12755,5277,720,5396,8581,23206,24008,4702,18456,6899,16005,19678,7808,11297,17391,22385,13446,16287,2164,22476,2892,14847,16973,5314,7682,18033,7569,19604,19485,11624,19415,3988,22492,2443,246,2697,15519,23716,6496,22514,11426,15371,21469,7150,961,233,7862,19382,3314,12605,25487,25600,24029,12113,20093,20163,2198,24722,666,22912,22658,7385,11967,20990,22192,17262,24405,14362,22583,17490,24407,17506,23958,2905,9682,13110,115,1573,15060,18996,10946,3240,24282,213,2023,5632,21159,6249,18245,8020,11748,9535,12435,14257,11129,9305,9289,9738,24339,13014,2809,12376,23913,8968,17146,21260,11415,23680,1106,23365,17946,24411,23794,1107,24937,5833,4318,3631,24510,215,5167,7007,6574,17125,13849,9778,10416,14913,18321,25088,12796,18527,16107,815,1130,9891,8845,2997,700,25158,20432,15450,17652,23061,876,20219,13427,12020,1902,20228,1974,5407,272,17968,7793,13318,19879,16568,8679,23656,14580,6865,13759,21904,25344,5612,15320,18100,10489,1664,4506,17556,154,11679,3471,3399,18220,19922,7361,25441,4490,18005,14755,354,18867,12966,4156,4977,15539,3954,20246,4669,17782,22613,13448,19431,3539,7891,13768,10451,18731,3982,13060,23919,18400,21271,3106,18442,10492,6380,19369,8479,16468,5085,6108,1401,686,3150,10807,15141,18323,2631,14171,3942,1382,22020,2888,8559,14223,8883,11531,1224,4053,22268,8729,25453,23354,654,4048,14408,18092,23514,21765,11644,25254,17738,4647,8799,7488,20277,2199,693,14154,2819,2495,5187,12846,20324,24881,20205,17020,2395,1593,20899,7145,18702,9596,5923,17793,14304,8210,3216,12155,9314,23437,3125,22709,10754,8628,20287,17919,7568,18032,5997,6116,13977,6186,21613,3109,23158,25355,22904,10082,1885,19105,3087,14175,10230,4132,18451,24640,25368,17739,6219,22287,12996,114}
+	local wsqrt = {1,22188,114,20534,12996,11185,22287,20641,6219,23383,17739,3158,25368,1598,24640,2965,18451,5197,4132,3635,10230,4774,14175,6615,3087,11681,19105,382,1885,17947,10082,23479,22904,14102,25355,20366,23158,17634,3109,13398,21613,16913,6186,8007,13977,16763,6116,16508,5997,13039,18032,1588,7568,1825,17919,3242,20287,11174,8628,19387,10754,8432,22709,14011,3125,9992,23437,12644,9314,7760,12155,14206,3216,6621,8210,12365,14304,1555,17793,23664,5923,9591,9596,18132,18702,18968,7145,11868,20899,21700,1593,16104,2395,18185,17020,25010,20205,9429,24881,25265,20324,12898,12846,11115,5187,12661,2495,9698,2819,4729,14154,1485,693,15684,2199,21507,20277,19703,7488,18855,8799,24587,4647,12409,17738,6571,25254,6665,11644,17381,21765,10157,23514,5853,18092,1616,14408,5017,4048,8716,654,20786,23354,14312,25453,18705,8729,7487,22268,8685,4053,17252,1224,21052,11531,19035,8883,19506,14223,21998,8559,24475,2888,25242,22020,10276,1382,19419,3942,12080,14171,20267,2631,6348,18323,6844,15141,12186,10807,6750,3150,1470,686,13974,1401,5774,6108,18211,5085,2373,16468,14512,8479,15904,19369,20986,6380,11511,10492,6603,18442,10313,3106,23637,21271,6513,18400,53,23919,6042,13060,23162,3982,3565,18731,22395,10451,18531,13768,13252,7891,269,3539,5065,19431,14188,13448,4569,22613,8846,17782,10005,4669,14126,20246,23102,3954,22326,15539,10665,4977,12563,4156,24127,12966,11171,18867,19045,354,20646,14755,23953,18005,16936,4490,10629,25441,8459,7361,17089,19922,2470,18220,25570,3399,22067,3471,6740,11679,330,154,12019,17556,13313,4506,7223,1664,4190,10489,16842,18100,25514,15320,15683,5612,21393,25344,6707,21904,22169,13759,18368,6865,20271,14580,6804,23656,7626,8679,24531,16568,6025,19879,21224,13318,13042,7793,1930,17968,15212,272,18901,5407,4230,1974,21402,20228,7733,1902,11128,12020,14143,13427,25040,20219,12849,876,5529,23061,15882,17652,18478,15450,7210,20432,2708,25158,1500,700,17394,2997,11639,8845,21195,9891,9736,1130,9061,815,8914,16107,17757,18527,1819,12796,2558,25088,10001,18321,13670,14913,22320,10416,9981,9778,11390,13849,18410,17125,25059,6574,15015,7007,22044,5167,4118,215,8634,24510,11438,3631,23882,4318,8842,5833,9549,24937,13344,1107,10757,23794,23051,24411,16512,17946,13495,23365,2370,1106,14170,23680,2517,11415,5327,21260,18455,17146,4588,8968,11012,23913,919,12376,2362,2809,13258,13014,953,24339,6238,9738,19905,9289,16282,9305,12876,11129,8607,14257,8360,12435,5803,9535,21517,11748,20843,8020,20810,18245,17048,6249,23397,21159,4754,5632,4335,2023,7771,213,15460,24282,21572,3240,1512,10946,18762,18996,13985,15060,7028,1573,7561,115,17121,13110,6118,9682,6225,2905,18423,23958,940,17506,4756,24407,4563,17490,8162,22583,8832,14362,8409,24405,11389,17262,18296,22192,12063,20990,18329,11967,15825,7385,11980,22658,8867,22912,12399,666,5431,24722,4710,2198,24920,20163,24770,20093,7670,12113,3946,24029,14627}
+	local wsqrtrev = {25551,14522,23804,18093,16827,25086,6211,9652,9711,17152,7496,5091,7252,15540,7699,5526,19156,8133,6456,10177,10836,23220,9527,20415,25460,14327,8757,18765,18267,6228,17003,10834,1272,6383,2706,24085,4066,23342,17103,7391,4866,21399,20254,25115,17245,4038,23282,24289,15475,11217,5750,19636,1847,18587,10571,8023,2563,16464,9679,24398,8394,3358,10853,4970,10650,4535,24347,11942,25590,7291,8309,17805,5238,7567,16215,16460,16985,18110,24178,608,15932,8539,7326,8384,21623,20734,18829,3775,4432,20469,3632,22412,481,4688,13703,22049,10675,22875,12445,15696,4376,20349,18004,12979,13183,24592,12467,1114,13359,10340,7528,23446,6354,17273,4098,16096,16205,9124,1265,6368,17303,505,12054,229,4148,1574,18002,16632,10039,6883,11092,16454,2343,8678,22253,22084,10750,1092,2340,1357,17537,8321,21488,24102,11417,24465,1223,6278,2481,12631,8780,15157,3221,17874,20015,13631,25552,25496,25376,14147,4714,17416,11719,10483,15149,17833,5298,381,8131,10109,7033,18728,21845,24867,9399,23798,3451,7395,23161,2086,4470,2264,12166,469,1005,20440,18199,2425,12511,23152,5724,15923,12177,18779,18297,2635,12961,20459,21897,6692,14340,23414,13600,18171,2365,19697,5635,12075,274,11559,21112,19639,9168,23303,24334,22886,5154,7387,12172,15111,10437,22365,22324,7607,19958,2537,12751,20009,24590,16120,23571,21251,8965,22868,12430,4692,6397,2736,20492,24,7366,12127,7700,16500,20728,4187,19944,2507,16344,24051,14965,21096,23262,9617,9636,13334,17601,19430,19692,1967,4215,20004,20922,8260,17700,5013,21714,20929,8275,3103,2992,13726,18441,21230,8920,15457,18493,3055,13861,15073,3041,13831,18666,7083,4206,23642,6774,18173,24313,22841,23344,13450,10535,22575,22774,4914,10530,18907,14914,24644,19893,6055,12975,20489,18304,2650,23965,18438,13909,4204,1694,3630,464,22938,12580,12328,11788,25260,21213,1569,14334,8772,4168,16246,23841,14515,23789,7089,18848,7473,8699,22298,3894,4687,2729,20477,14621,9387,20115,10188,3545,14911,17323,15177,17893,23713,17898,1780,157,7651,16395,20503,18334,24658,19923,2462,8933,4513,13328,2959,9998,17767,23443,24634,12557,15936,1233,13614,18201,24373,15655,15260,7099,583,23193,20441,3572,3997,8565,11039,23655,21431,13008,24217,18978,437,8251,21338,16466,6026,1941,502,4733,21114,15986,12312,15411,108,7546,16170,9049,23048,16473,6041,12945,24082,22346,18626,3340,18129,2275,4875,17761,8801,15202,10632,11811,21652,6167,13215,17346,11569,2847,9758,20910,4577,24437,1163,13464,10565,18982,18732,14539,5554,19216,947,23973,3826,884,23838,7194,19073,18927,3985,4882,17776,19805,13181,2644,9323,9006,11984,79,22113,21784,21079,15911,8494,25516,14447,19986,2597,5565,11925,18239,6168,24189,18918,7623,16335,2088,817,5408,4274,1844,11266,5855,19861,13301,13873,18756,21905,17681,1315,17447,19100,8013,20828,744,23538,17523,8291,25081,2543,1792,3840,914,20245,3152,3097,13951,4294,16516,17105,3738,8010,13507,21629,9775,2660,5700,8557}
+	local a = {5814,7777,6783,11441,12726,16939,5820,20322,7816,15027,10887,3482,2219,17067,13282,5063,19736,19008,3856,22317,25359,15211,17450,2809,1418,12920,10555,22948,3819,13226,5457,7845,12847,5280,8185,1510,1909,14564,23460,9260,4543,1047,21339,10471,9047,14127,11644,9429,4679,23679,890,9628,3653,9171,2441,16690,7834,113,4929,3680,4665,21384,14695,19415,11609,17704,21501,14557,7993,5320,12592,516,11854,11177,683,24070,23311,2337,18301,19491,4232,16134,24406,5441,8602,13949,20794,22473,20705,2179,11426,19337,21717,11729,25550,12866,22583,16467,14912,20005,16925,14526,10007,2184,1976,17363,20585,21468,18489,12249,2228,14654,19848,7721,2999,12129,2196,8640,8817,15981,10696,23569,5395,5187,7211,9398,21776,4995,10597,6131,11983,20344,2267,8302,13050,23082,2142,17301,1417,5587,17101,31,12237,24086,14673,7607,12541,6171,14730,10381,2288,17274,3485,5558,5084,13222,2585,8173,19577,21712,1205,10098,19278,25409,19590,20198,1370,1065,22985,7187,14734,15338,18279,17028,4594,20353,1852,6534,22599,15788,12497,21775,2746,15574,24541,25094,16861,21583,7688,23896,12574,20773,13737,6324,25003,927,18965,11390,9848,2982,10401,5168,25399,4710,18194,3954,23847,25537,1246,10404,24144,20607,4668,16989,18289,3730,11169,3388,15210,21920,10854,14979,12549,19351,12533,3558,25200,21895,21725,13540,9224,9877,16360,9341,20962,12199,24586,5902,2861,4368,16296,12904,23857,1394,17890,20905,4694,2009,14142,1958,9034,22465,3789,19881,15167,14223,2261,3979,23470,8164,19398,16145,24919,21732,17214,1414,16372,5652,9955,9654,21334,24539,23323,15832,8946,25039,17423,18983,5746,4418,22218,17124,24653,87,25515,8963,9067,4988,11521,2316,12678,16774,16943,15408,2681,9506,22512,849,17392,9639,2887,11492,4840,16364,2901,22106,9984,5073,17185,22039,19494,24870,23713,9563,13169,23475,13455,6194,24138,8756,13390,22201,24698,25205,18266,14234,356,9825,5224,21469,17280,8945,18707,2640,13639,18773,4103,6820,9361,1249,23737,5828,6592,25336,22169,13413,15709,22903,4153,16175,13683,16936,1267,13088,17173,15599,18559,25245,24371,1266,8459,13267,7284,2634,22420,659,9603,12438,19523,15764,24161,1296,16089,18568,23084,4646,15034,8619,21023,7254,2850,8966,17138,19625,23474,25213,24353,15470,8409,12346,6543,13778,9992,12254,24112,305,9492,9659,9738,25228,8931,20068,13686,21085,23339,4808,15033,8617,9208,23558,23784,20288,10953,16829,21063,6362,1427,4775,3930,12363,14515,23746,23436,19827,7242,7476,21051,14135,21756,13922,11342,20459,2135,11112,17351,22892,20669,10145,25338,10301,14773,20073,10578,2704,21983,18970,13086,741,25042,2184,1989,4848,10053,19412,16865,23591,19793,10217,15140,15042,23310,11580,10159,19561,224,23692,9071,23196,15679,19607,9514,14300,25231,9186,19301,16492,25011,5436,19628,13468,22265,22182,5057,1421,24705,22133,3718,453,14665,14974,17249,22049,2132,17807,10486,7572,20895,251,11483,9803,25209,15385,16357,21762,5943,14011,9712,6280,18302,15677,15770,4203}
+	local B = 5
+
+	local rshift = bit.brshift
+	local lshift = bit.blshift
+
+	local function add(a,b)
+		local result = {}
+		for i = 1, N do
+			table.insert(result,(a[i] + b[i]) % q)
+		end
+		return result
+	end
+
+	local function sample(b)
+		local result = {}
+		for i = 1, N do
+			table.insert(result,math.random(-b,b))
+		end
+		return result
+	end
+
+	local function fftForward(x)
+		local index, step
+		local i, j, m
+		local t0, t1
+		for i = 1, N do x[i] = (x[i] * wsqrt[i]) % q end
+		step = 1
+		m = rshift(N,1)
+		while m >= 1 do
+			index = 0
+			for j = 0, m-1 do
+				for i = j, N-1, lshift(m,1) do
+					t0 = (x[i+1] + x[i+m+1]) % q
+					t1 = (x[i+1] - x[i+m+1]) % q
+					x[i+m+1] = (t1 * w[index+1]) % q
+					x[i+1] = t0
+				end
+				index = (index - step) % N
+			end
+			step = lshift(step,1)
+			m = rshift(m,1)
+		end
+		return x
+	end
+	a = fftForward(a)
+	local function fftBack(x)
+		local index, step
+		local i, j, m
+		local t0, t1
+		step = rshift(N,1)
+		m = 1
+		while m < N do
+			index = 0
+			for j = 0, m-1 do
+				for i = j, N-1, lshift(m,1) do
+					t0 = x[i+1]
+					t1 = (x[i+m+1] * wrev[index+1]) % q
+					x[i+1] = (t0 + t1) % q
+					x[i+m+1] = (t0 - t1) % q
+				end
+				index = (index - step) % N
+			end
+			step = rshift(step,1)
+			m = lshift(m,1)
+		end
+		for i = 1, N do
+			x[i] = (x[i] * wsqrtrev[i]) % q
+		end
+		return x
+	end
+
+	local function pwMul(a,b) -- Pointwise multiplication
+		local result = {}
+		a = {unpack(a)}
+		b = {unpack(b)}
+		for i = 1, N do
+			result[i] = (a[i] * b[i]) % q
+		end
+		return result
+	end
+
+	local function randomizedRound(v)
+		local result = {unpack(v)}
+		for i = 1, N do
+			local coinFlip = math.random(0,1)
+			if coinflip == 1 and result[i] == 0 then
+				result[i] = q - 1
+			elseif coinflip == 1 and result[i] == (q-1) / 4 then
+				result[i] = (q+3) / 4
+			end
+		end
+		return result
+	end
+
+	local function round(v) -- Modular rounding function
+		local result = {}
+		for i = 1, #v do
+			if v[i] > q/4 and v[i] < 3*q/4 then
+				result[#result+1] = 1
+			else
+				result[#result+1] = 0
+			end
+		end
+		return result
+	end
+
+	local function crossRound(v) -- Mask function
+		local result = {}
+		for i = 1, #v do
+			if v[i] >= q/4 and v[i] < q/2 then
+				table.insert(result,1)
+			elseif v[i] >= 3*q/4 and v[i] < q then
+				table.insert(result,1)
+			else
+				table.insert(result,0)
+			end
+		end
+		return result
+	end
+
+	local function rec(w,b)
+		local result = {}
+		for i = 1, #w do
+			if b[i] == 0 and w[i] >= 7*q/8 or b[i] == 0 and w[i] < 3*q/8 then
+				table.insert(result,0)
+			elseif b[i] == 1 and w[i] >= 5*q/8 or b[i] == 1 and w[i] < q/8 then
+				table.insert(result,0)
+			else
+				table.insert(result,1)
+			end
+		end
+		return result
+	end
+
+	function keyPair()
+		local s0 = sample(B)
+		local s1 = sample(B)
+		s0 = fftForward(s0)
+		s1 = fftForward(s1)
+		local b = add(pwMul(s1,a),s0)
+		return s1, b
+	end
+
+	function encapsulate(b)
+		local e0 = sample(B)
+		local e1 = sample(B)
+		local e2 = sample(B)
+		e0 = fftForward(e0)
+		e1 = fftForward(e1)
+		e2 = fftForward(e2)
+		local u = add(pwMul(e0,a),e1)
+		local v = add(pwMul(e0,b),e2)
+		v = fftBack(v)
+		local v_ = randomizedRound(v)
+		local mu = round(v_)
+		v = crossRound(v_)
+		local c = {v,u}
+		return mu, c
+	end
+
+	function decapsulate(s1,c)
+		local v = c[1]
+		local u = c[2]
+		local w = pwMul(u,s1)
+		w = fftBack(w)
+		local mu = rec(w,v)
+		return mu
+	end
+end
+
+local aes = {}
+local AES128, AES192, AES256, util, OFBMODE, ECBMODE, CTRMODE, CBCMODE, CFBMODE, ciphermode
+local initAES = function() --thanks heaps, squiddev
+
+	local function e(n)
+	local s=setmetatable({},{__index=_ENV or getfenv()})if setfenv then setfenv(n,s)end;return n(s)or s end
+	local t=e(function(n,...)local s=math.floor;local h,r
+	r=function(d,l)return s(d%4294967296/2^l)end
+	h=function(d,l)return(d*2^l)%4294967296 end
+	return{bnot=bit.bnot,band=bit.band,bor=bit.bor,bxor=bit.bxor,rshift=r,lshift=h}end)
+	local a=e(function(n,...)local s=t.bxor;local h=t.lshift;local r=0x100;local d=0xff;local l=0x11b;local u={}local c={}
+	local function m(k,q)return s(k,q)end;local function f(k,q)return s(k,q)end
+	local function w(k)if(k==1)then return 1 end;local q=d-c[k]return u[q]end;local function y(k,q)if(k==0 or q==0)then return 0 end;local j=c[k]+c[q]
+	if(j>=d)then j=j-d end;return u[j]end
+	local function p(k,q)
+	if(k==0)then return 0 end;local j=c[k]-c[q]if(j<0)then j=j+d end;return u[j]end
+	local function v()for k=1,r do print("log(",k-1,")=",c[k-1])end end
+	local function b()for k=1,r do print("exp(",k-1,")=",u[k-1])end end;local function g()local k=1
+	for q=0,d-1 do u[q]=k;c[k]=q;k=s(h(k,1),k)if k>d then k=f(k,l)end end end;g()return
+	{add=m,sub=f,invert=w,mul=y,div=dib,printLog=v,printExp=b}end)
+	util=e(function(n,...)local s=t.bxor;local h=t.rshift;local r=t.band;local d=t.lshift;local l;local function u(O)O=s(O,h(O,4))
+	O=s(O,h(O,2))O=s(O,h(O,1))return r(O,1)end
+	local function c(O,I)if(I==0)then return
+	r(O,0xff)else return r(h(O,I*8),0xff)end end;local function m(O,I)
+	if(I==0)then return r(O,0xff)else return d(r(O,0xff),I*8)end end
+	local function f(O,I,N)local S={}
+	for H=0,N-1 do
+	S[H+1]=
+	m(O[I+ (H*4)],3)+m(O[I+ (H*4)+1],2)+
+	m(O[I+ (H*4)+2],1)+m(O[I+ (H*4)+3],0)if N%10000 ==0 then l()end end;return S end;local function w(O,I,N,S)S=S or#O;for H=0,S-1 do
+	for R=0,3 do I[N+H*4+ (3-R)]=c(O[H+1],R)end;if S%10000 ==0 then l()end end
+	return I end;local function y(O)local I=""
+	for N,S in
+	ipairs(O)do I=I..string.format("%02x ",S)end;return I end
+	local function p(O)local I={}for N=1,#O,2 do I[#I+1]=tonumber(O:sub(N,
+	N+1),16)end;return I end
+	local function v(O)local I=type(O)
+	if(I=="number")then return string.format("%08x",O)elseif
+	(I=="table")then return y(O)elseif(I=="string")then local N={string.byte(O,1,#O)}
+	return y(N)else return O end end
+	local function b(O)local I=#O;local N=math.random(0,255)local S=math.random(0,255)
+	local H=string.char(N,S,N,S,c(I,3),c(I,2),c(I,1),c(I,0))O=H..O;local R=math.ceil(#O/16)*16-#O;local D=""for L=1,R do D=D..
+	string.char(math.random(0,255))end;return O..D end
+	local function g(O)local I={string.byte(O,1,4)}if
+	(I[1]==I[3]and I[2]==I[4])then return true end;return false end
+	local function k(O)if(not g(O))then return nil end
+	local I=
+	m(string.byte(O,5),3)+
+	m(string.byte(O,6),2)+m(string.byte(O,7),1)+m(string.byte(O,8),0)return string.sub(O,9,8+I)end;local function q(O,I)for N=1,16 do O[N]=s(O[N],I[N])end end
+	local function j(O)
+	local I=16;while true do local N=O[I]+1
+	if N>=256 then O[I]=N-256;I=(I-2)%16+1 else O[I]=N;break end end end;local x,z,_=os.queueEvent,coroutine.yield,os.time;local E=_()
+	local function l()local O=_()if O-E>=0.03 then E=O
+	x("sleep")z("sleep")end end
+	local function T(O)local I,N,S,H=string.char,math.random,l,table.insert;local R={}for D=1,O do
+	H(R,N(0,255))if D%10240 ==0 then S()end end;return R end
+	local function A(O)local I,N,S,H=string.char,math.random,l,table.insert;local R={}for D=1,O do
+	H(R,I(N(0,255)))if D%10240 ==0 then S()end end
+	return table.concat(R)end
+	return
+	{byteParity=u,getByte=c,putByte=m,bytesToInts=f,intsToBytes=w,bytesToHex=y,hexToBytes=p,toHexString=v,padByteString=b,properlyDecrypted=g,unpadByteString=k,xorIV=q,increment=j,sleepCheckIn=l,getRandomData=T,getRandomString=A}end)
+	aes=e(function(n,...)local s=util.putByte;local h=util.getByte;local r='rounds'local d="type"local l=1;local u=2
+	local c={}local m={}local f={}local w={}local y={}local p={}local v={}local b={}local g={}local k={}
+	local q={0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,0xab000000,0x4d000000,0x9a000000,0x2f000000}
+	local function j(M)mask=0xf8;result=0
+	for F=1,8 do result=t.lshift(result,1)
+	parity=util.byteParity(t.band(M,mask))result=result+parity;lastbit=t.band(mask,1)
+	mask=t.band(t.rshift(mask,1),0xff)
+	if(lastbit~=0)then mask=t.bor(mask,0x80)else mask=t.band(mask,0x7f)end end;return t.bxor(result,0x63)end;local function x()
+	for M=0,255 do if(M~=0)then inverse=a.invert(M)else inverse=M end
+	mapped=j(inverse)c[M]=mapped;m[mapped]=M end end
+	local function z()
+	for M=0,255 do
+	byte=c[M]
+	f[M]=
+	s(a.mul(0x03,byte),0)+s(byte,1)+s(byte,2)+s(a.mul(0x02,byte),3)w[M]=s(byte,0)+s(byte,1)+s(a.mul(0x02,byte),2)+
+	s(a.mul(0x03,byte),3)y[M]=
+
+	s(byte,0)+s(a.mul(0x02,byte),1)+s(a.mul(0x03,byte),2)+s(byte,3)p[M]=
+
+	s(a.mul(0x02,byte),0)+s(a.mul(0x03,byte),1)+s(byte,2)+s(byte,3)end end
+	local function _()
+	for M=0,255 do byte=m[M]
+	v[M]=
+	s(a.mul(0x0b,byte),0)+s(a.mul(0x0d,byte),1)+s(a.mul(0x09,byte),2)+
+	s(a.mul(0x0e,byte),3)
+	b[M]=
+	s(a.mul(0x0d,byte),0)+s(a.mul(0x09,byte),1)+s(a.mul(0x0e,byte),2)+
+	s(a.mul(0x0b,byte),3)
+	g[M]=
+	s(a.mul(0x09,byte),0)+s(a.mul(0x0e,byte),1)+s(a.mul(0x0b,byte),2)+
+	s(a.mul(0x0d,byte),3)
+	k[M]=
+	s(a.mul(0x0e,byte),0)+s(a.mul(0x0b,byte),1)+s(a.mul(0x0d,byte),2)+
+	s(a.mul(0x09,byte),3)end end;local function E(M)local F=t.band(M,0xff000000)return
+	(t.lshift(M,8)+t.rshift(F,24))end
+	local function T(M)return
+	s(c[h(M,0)],0)+s(c[h(M,1)],1)+s(c[h(M,2)],2)+
+	s(c[h(M,3)],3)end
+	local function A(M)local F={}local W=math.floor(#M/4)if(
+	(W~=4 and W~=6 and W~=8)or(W*4 ~=#M))then
+	error("Invalid key size: "..tostring(W))return nil end;F[r]=W+6;F[d]=l;for Y=0,W-1
+	do
+	F[Y]=
+	s(M[Y*4+1],3)+s(M[Y*4+2],2)+s(M[Y*4+3],1)+s(M[Y*4+4],0)end
+	for Y=W,(F[r]+1)*4-1 do
+	local P=F[Y-1]
+	if(Y%W==0)then P=E(P)P=T(P)local V=math.floor(Y/W)P=t.bxor(P,q[V])elseif(
+	W>6 and Y%W==4)then P=T(P)end;F[Y]=t.bxor(F[(Y-W)],P)end;return F end
+	local function O(M)local F=h(M,3)local W=h(M,2)local Y=h(M,1)local P=h(M,0)
+	return
+
+
+
+	s(a.add(a.add(a.add(a.mul(0x0b,W),a.mul(0x0d,Y)),a.mul(0x09,P)),a.mul(0x0e,F)),3)+
+	s(a.add(a.add(a.add(a.mul(0x0b,Y),a.mul(0x0d,P)),a.mul(0x09,F)),a.mul(0x0e,W)),2)+
+	s(a.add(a.add(a.add(a.mul(0x0b,P),a.mul(0x0d,F)),a.mul(0x09,W)),a.mul(0x0e,Y)),1)+
+	s(a.add(a.add(a.add(a.mul(0x0b,F),a.mul(0x0d,W)),a.mul(0x09,Y)),a.mul(0x0e,P)),0)end
+	local function I(M)local F=h(M,3)local W=h(M,2)local Y=h(M,1)local P=h(M,0)local V=t.bxor(P,Y)
+	local B=t.bxor(W,F)local G=t.bxor(V,B)G=t.bxor(G,a.mul(0x08,G))
+	w=t.bxor(G,a.mul(0x04,t.bxor(Y,F)))G=t.bxor(G,a.mul(0x04,t.bxor(P,W)))
+	return
+
+
+	s(t.bxor(t.bxor(P,G),a.mul(0x02,t.bxor(F,P))),0)+s(t.bxor(t.bxor(Y,w),a.mul(0x02,V)),1)+
+	s(t.bxor(t.bxor(W,G),a.mul(0x02,t.bxor(F,P))),2)+
+	s(t.bxor(t.bxor(F,w),a.mul(0x02,B)),3)end
+	local function N(M)local F=A(M)if(F==nil)then return nil end;F[d]=u;for W=4,(F[r]+1)*4-5 do
+	F[W]=O(F[W])end;return F end;local function S(M,F,W)
+	for Y=0,3 do M[Y+1]=t.bxor(M[Y+1],F[W*4+Y])end end
+	local function H(M,F)
+	F[1]=t.bxor(t.bxor(t.bxor(f[h(M[1],3)],w[h(M[2],2)]),y[h(M[3],1)]),p[h(M[4],0)])
+	F[2]=t.bxor(t.bxor(t.bxor(f[h(M[2],3)],w[h(M[3],2)]),y[h(M[4],1)]),p[h(M[1],0)])
+	F[3]=t.bxor(t.bxor(t.bxor(f[h(M[3],3)],w[h(M[4],2)]),y[h(M[1],1)]),p[h(M[2],0)])
+	F[4]=t.bxor(t.bxor(t.bxor(f[h(M[4],3)],w[h(M[1],2)]),y[h(M[2],1)]),p[h(M[3],0)])end
+	local function R(M,F)
+	F[1]=s(c[h(M[1],3)],3)+s(c[h(M[2],2)],2)+
+	s(c[h(M[3],1)],1)+s(c[h(M[4],0)],0)
+	F[2]=s(c[h(M[2],3)],3)+s(c[h(M[3],2)],2)+
+	s(c[h(M[4],1)],1)+s(c[h(M[1],0)],0)
+	F[3]=s(c[h(M[3],3)],3)+s(c[h(M[4],2)],2)+
+	s(c[h(M[1],1)],1)+s(c[h(M[2],0)],0)
+	F[4]=s(c[h(M[4],3)],3)+s(c[h(M[1],2)],2)+
+	s(c[h(M[2],1)],1)+s(c[h(M[3],0)],0)end
+	local function D(M,F)
+	F[1]=t.bxor(t.bxor(t.bxor(v[h(M[1],3)],b[h(M[4],2)]),g[h(M[3],1)]),k[h(M[2],0)])
+	F[2]=t.bxor(t.bxor(t.bxor(v[h(M[2],3)],b[h(M[1],2)]),g[h(M[4],1)]),k[h(M[3],0)])
+	F[3]=t.bxor(t.bxor(t.bxor(v[h(M[3],3)],b[h(M[2],2)]),g[h(M[1],1)]),k[h(M[4],0)])
+	F[4]=t.bxor(t.bxor(t.bxor(v[h(M[4],3)],b[h(M[3],2)]),g[h(M[2],1)]),k[h(M[1],0)])end
+	local function L(M,F)
+	F[1]=s(m[h(M[1],3)],3)+s(m[h(M[4],2)],2)+
+	s(m[h(M[3],1)],1)+s(m[h(M[2],0)],0)
+	F[2]=s(m[h(M[2],3)],3)+s(m[h(M[1],2)],2)+
+	s(m[h(M[4],1)],1)+s(m[h(M[3],0)],0)
+	F[3]=s(m[h(M[3],3)],3)+s(m[h(M[2],2)],2)+
+	s(m[h(M[1],1)],1)+s(m[h(M[4],0)],0)
+	F[4]=s(m[h(M[4],3)],3)+s(m[h(M[3],2)],2)+
+	s(m[h(M[2],1)],1)+s(m[h(M[1],0)],0)end
+	local function U(M,F,W,Y,P)W=W or 1;Y=Y or{}P=P or 1;local V={}local B={}if(M[d]~=l)then
+	error("No encryption key: "..
+	tostring(M[d])..", expected "..l)return end
+	V=util.bytesToInts(F,W,4)S(V,M,0)local G=1;while(G<M[r]-1)do H(V,B)S(B,M,G)G=G+1;H(B,V)S(V,M,G)
+	G=G+1 end;H(V,B)S(B,M,G)G=G+1;R(B,V)S(V,M,G)
+	util.sleepCheckIn()return util.intsToBytes(V,Y,P)end
+	local function C(M,F,W,Y,P)W=W or 1;Y=Y or{}P=P or 1;local V={}local B={}
+	if(M[d]~=u)then error("No decryption key: "..
+	tostring(M[d]))return end;V=util.bytesToInts(F,W,4)S(V,M,M[r])local G=M[r]-1;while(G>2)do
+	D(V,B)S(B,M,G)G=G-1;D(B,V)S(V,M,G)G=G-1 end;D(V,B)
+	S(B,M,G)G=G-1;L(B,V)S(V,M,G)util.sleepCheckIn()return
+	util.intsToBytes(V,Y,P)end;x()z()_()
+	return{ROUNDS=r,KEY_TYPE=d,ENCRYPTION_KEY=l,DECRYPTION_KEY=u,expandEncryptionKey=A,expandDecryptionKey=N,encrypt=U,decrypt=C}end)
+	local o=e(function(n,...)local function s()return{}end;local function h(d,l)table.insert(d,l)end;local function r(d)return
+	table.concat(d)end;return{new=s,addString=h,toString=r}end)
+	ciphermode=e(function(n,...)local s={}local h=math.random
+	function s.encryptString(r,d,l,u)if u then local f={}for w=1,16 do f[w]=u[w]end;u=f else
+	u={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}end
+	local c=aes.expandEncryptionKey(r)local m=o.new()for f=1,#d/16 do local w=(f-1)*16+1
+	local y={string.byte(d,w,w+15)}u=l(c,y,u)
+	o.addString(m,string.char(unpack(y)))end
+	return o.toString(m)end;function s.encryptECB(r,d,l)aes.encrypt(r,d,1,d,1)end;function s.encryptCBC(r,d,l)
+	util.xorIV(d,l)aes.encrypt(r,d,1,d,1)return d end;function s.encryptOFB(r,d,l)
+	aes.encrypt(r,l,1,l,1)util.xorIV(d,l)return l end;function s.encryptCFB(r,d,l)
+	aes.encrypt(r,l,1,l,1)util.xorIV(d,l)return d end
+	function s.encryptCTR(r,d,l)
+	local u={}for c=1,16 do u[c]=l[c]end;aes.encrypt(r,l,1,l,1)
+	util.xorIV(d,l)util.increment(u)return u end
+	function s.decryptString(r,d,l,u)if u then local f={}for w=1,16 do f[w]=u[w]end;u=f else
+	u={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}end;local c
+	if l==s.decryptOFB or
+	l==s.decryptCFB or l==s.decryptCTR then
+	c=aes.expandEncryptionKey(r)else c=aes.expandDecryptionKey(r)end;local m=o.new()for f=1,#d/16 do local w=(f-1)*16+1
+	local y={string.byte(d,w,w+15)}u=l(c,y,u)
+	o.addString(m,string.char(unpack(y)))end
+	return o.toString(m)end;function s.decryptECB(r,d,l)aes.decrypt(r,d,1,d,1)return l end;function s.decryptCBC(r,d,l)
+	local u={}for c=1,16 do u[c]=d[c]end;aes.decrypt(r,d,1,d,1)
+	util.xorIV(d,l)return u end;function s.decryptOFB(r,d,l)
+	aes.encrypt(r,l,1,l,1)util.xorIV(d,l)return l end;function s.decryptCFB(r,d,l)
+	local u={}for c=1,16 do u[c]=d[c]end;aes.encrypt(r,l,1,l,1)
+	util.xorIV(d,l)return u end
+	s.decryptCTR=s.encryptCTR;return s end)AES128=16;AES192=24;AES256=32;ECBMODE=1;CBCMODE=2;OFBMODE=3;CFBMODE=4;CTRMODE=4
+	local function i(n,s,h)local r=s;if(s==
+	AES192)then r=32 end
+	if(r>#n)then local l=""for u=1,r-#n do
+	l=l..string.char(0)end;n=n..l else n=string.sub(n,1,r)end;local d={string.byte(n,1,#n)}
+	n=ciphermode.encryptString(d,n,ciphermode.encryptCBC,h)n=string.sub(n,1,s)return{string.byte(n,1,#n)}end
+	function encrypt(n,s,h,r,d)assert(n~=nil,"Empty password.")
+	assert(n~=nil,"Empty data.")local r=r or CBCMODE;local h=h or AES128;local l=i(n,h,d)
+	local u=util.padByteString(s)
+	if r==ECBMODE then
+	return ciphermode.encryptString(l,u,ciphermode.encryptECB,d)elseif r==CBCMODE then
+	return ciphermode.encryptString(l,u,ciphermode.encryptCBC,d)elseif r==OFBMODE then
+	return ciphermode.encryptString(l,u,ciphermode.encryptOFB,d)elseif r==CFBMODE then
+	return ciphermode.encryptString(l,u,ciphermode.encryptCFB,d)elseif r==CTRMODE then
+	return ciphermode.encryptString(l,u,ciphermode.encryptCTR,d)else error("Unknown mode",2)end end
+	function decrypt(n,s,h,r,d)local r=r or CBCMODE;local h=h or AES128;local l=i(n,h,d)local u
+	if r==ECBMODE then
+	u=ciphermode.decryptString(l,s,ciphermode.decryptECB,d)elseif r==CBCMODE then
+	u=ciphermode.decryptString(l,s,ciphermode.decryptCBC,d)elseif r==OFBMODE then
+	u=ciphermode.decryptString(l,s,ciphermode.decryptOFB,d)elseif r==CFBMODE then
+	u=ciphermode.decryptString(l,s,ciphermode.decryptCFB,d)elseif r==CTRMODE then
+	u=ciphermode.decryptString(l,s,ciphermode.decryptCTR,d)else error("Unknown mode",2)end;result=util.unpadByteString(u)
+	if(result==nil)then return nil end;return result end
+end
+
+initRLWE()
+initAES()
+
+local encTransmit = function(port,report, message, key)
+	if type(key) == "table" then
+		key = table.concat(key)
+	end
+	if key then
+		local outsend
+		if type(message) == "table" then
+			for k,v in pairs(message) do
+				if (k == id) or (not v) then
+					outsend[k] = v
+				else
+					outsend[k] = aes.encrypt(key,v)
+				end
+			end
+		else
+			outsend = message
+		end
+		modem.transmit(port,report,aes.encrypt(key, textutils.serialize(outsend)))
+	else
+		modem.transmit(port,report,message)
+	end
+end
+
+local decryptInput = function(input, key)
+	assert(type(input) == "table", "input must be table!")
+	if type(key) == "table" then
+		key = table.concat(key)
+	end
+	local output = {}
+	for k,v in pairs(input) do
+		if (k == "id") or (not v) then
+			output[k] = v
+		else
+			output[k] = aes.decrypt(key, v)
+		end
+	end
+	return output
+end
+
+local binaryToString = function(b)
+	local out = ""
+	for a = 1, #b, 8 do
+		out = out..string.char(tonumber(table.concat({ b[a],b[a+1],b[a+2],b[a+3],b[a+4],b[a+5],b[a+6],b[a+7] }),2))
+	end
+	return out
 end
 
 local main = function()
@@ -76,189 +530,208 @@ local main = function()
 		evt = {os.pullEvent()}
 		if evt[1] == "modem_message" then
 			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
-			if type(msg) == "table" and ((freq == port) or (freq == id))  then
+			if type(msg) == "table" and ((freq == port) or (freq == id)) then
 				if (type(msg.id) == "string" or type(msg.id) == "number") and (type(msg.response) == "string") then
-				
-					if (type(msg.gameName) == "string") and (msg.serverName == serverName) then
-						
-						if msg.response == "getVariable" then
-							local response = {}
-							response.success = false
-							if type(msg.varname) == "string" and type(msg.user) == "string" and ServData[msg.gameName] then
-								if ServData[msg.gameName][msg.user] then
-									response.success = true
-									response.varval = ServData[msg.gameName][msg.user][msg.varname]
-								end
-							end
-							modem = getModem()
-							modem.transmit(msg.id,port,{
-								id = id,
-								serverName = serverName,
-								gameName = msg.gameName,
-								clientName = msg.clientName,
-								user = msg.user,
-								clientID = msg.id,
-								response = "getVariable_response",
-								varval = response.varval,
-								varname = msg.varname,
-								success = response.success
-							})
-							logadd("getVariable "..tostring(response.success),true)
-						end
-						
-						if msg.response == "setVariable" then
-							local result
-							if (type(msg.varname) == "string") and (type(msg.user) == "string") then
-								if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
-								if not ServData[msg.gameName][msg.user] then ServData[msg.gameName][msg.user] = {} end
-								ServData[msg.gameName][msg.user][msg.varname] = (msg.varval)
-								result = true
-							else
-								result = false
-							end
-							modem.transmit(msg.id,port,{
-								id = id,
-								serverName = serverName,
-								gameName = msg.gameName,
-								clientName = msg.clientName,
-								user = msg.user,
-								clientID = msg.id,
-								varname = msg.varname,
-								response = "setVariable_response",
-								success = result
-							})
-							logadd("setVariable "..tostring(result),true)
-						end
-						
-						if msg.response == "getEnvironment" then
-							local response = {}
-							response.varval = {}
-							response.success = false
-							if (type(msg.user) == "string") then
-								if ServData[msg.gameName] then
-									if ServData[msg.gameName] then
+					
+					if (type(msg.gameName) == "string") then
+						if clientKeys[msg.id] then
+							msg = decryptInput(msg,clientKeys[msg.id])
+							if msg.serverName == serverName then
+								if msg.response == "getVariable" then
+									local response = {}
+									response.success = false
+									if type(msg.varname) == "string" and type(msg.user) == "string" and ServData[msg.gameName] then
 										if ServData[msg.gameName][msg.user] then
 											response.success = true
-			    							for k,v in pairs(ServData[msg.gameName][msg.user]) do
-												response.varval[k] = v
-											end
-										else
-											response.success = false
+											response.varval = ServData[msg.gameName][msg.user][msg.varname]
 										end
 									end
+									modem = getModem()
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										user = msg.user,
+										clientID = msg.id,
+										response = "getVariable_response",
+										varval = response.varval,
+										varname = msg.varname,
+										success = response.success
+									})
+									logadd("getVariable "..tostring(response.success),true)
 								end
-							end
-							modem = getModem()
-							modem.transmit(msg.id,port,{
-								id = id,
-								serverName = serverName,
-								gameName = msg.gameName,
-								clientName = msg.clientName,
-								user = msg.user,
-								clientID = msg.id,
-								response = "getEnvironment_response",
-								success = response.success,
-								environment = response.varval
-							})
-							logadd("getEnvironment "..tostring(response.success),true)
-						end
-						
-						if msg.response == "setEnvironment" then
-							local result
-							if (type(msg.environment) == "table") and (type(msg.user) == "string") then
-								if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
-								ServData[msg.gameName][msg.user] = (msg.environment)
-								result = true
-							else
-								result = false
-							end
-							modem.transmit(msg.id,port,{
-								id = id,
-								serverName = serverName,
-								gameName = msg.gameName,
-								clientName = msg.clientName,
-								user = msg.user,
-								clientID = msg.id,
-								response = "setEnvironment_response",
-								success = result
-							})
-							logadd("setVariable "..tostring(result),true)
-						end
 
-						if msg.response == "queueEvent" then
-							local response = {}
-							response.users = {}
-							response.success = false
-							if (type(msg.eventTbl) == "table") then
-								response.success = true
-							end
-							modem = getModem()
-							modem.transmit(port,port,{
-								id = id,
-								serverName = serverName,
-								gameName = msg.gameName,
-								clientName = msg.clientName,
-								clientID = msg.id,
-								response = "queueEvent_response",
-								eventTbl = msg.eventTbl,
-								success = response.success
-							})
-							logadd("queueEvent "..tostring(response.success),true)
-						end
-						
-						if msg.response == "getUsers" then
-							local response = {}
-							response.users = {}
-							response.success = false
-							if ServData[msg.gameName] then
-								response.success = true
-								for k,v in pairs(ServData[msg.gameName]) do
-									response.users[#response.users+1] = k
+								if msg.response == "setVariable" then
+									local result
+									if (type(msg.varname) == "string") and (type(msg.user) == "string") then
+										if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
+										if not ServData[msg.gameName][msg.user] then ServData[msg.gameName][msg.user] = {} end
+										ServData[msg.gameName][msg.user][msg.varname] = (msg.varval)
+										result = true
+									else
+										result = false
+									end
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										user = msg.user,
+										clientID = msg.id,
+										varname = msg.varname,
+										response = "setVariable_response",
+										success = result
+									})
+									logadd("setVariable "..tostring(result),true)
+								end
+
+								if msg.response == "getEnvironment" then
+									local response = {}
+									response.varval = {}
+									response.success = false
+									if (type(msg.user) == "string") then
+										if ServData[msg.gameName] then
+											if ServData[msg.gameName] then
+												if ServData[msg.gameName][msg.user] then
+													response.success = true
+												for k,v in pairs(ServData[msg.gameName][msg.user]) do
+														response.varval[k] = v
+													end
+												else
+													response.success = false
+												end
+											end
+										end
+									end
+									modem = getModem()
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										user = msg.user,
+										clientID = msg.id,
+										response = "getEnvironment_response",
+										success = response.success,
+										environment = response.varval
+									})
+									logadd("getEnvironment "..tostring(response.success),true)
+								end
+
+								if msg.response == "setEnvironment" then
+									local result
+									if (type(msg.environment) == "table") and (type(msg.user) == "string") then
+										if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
+										ServData[msg.gameName][msg.user] = (msg.environment)
+										result = true
+									else
+										result = false
+									end
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										user = msg.user,
+										clientID = msg.id,
+										response = "setEnvironment_response",
+										success = result
+									})
+									logadd("setVariable "..tostring(result),true)
+								end
+
+								if msg.response == "queueEvent" then
+									local response = {}
+									response.users = {}
+									response.success = false
+									if (type(msg.eventTbl) == "table") then
+										response.success = true
+									end
+									modem = getModem()
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "queueEvent_response",
+										eventTbl = msg.eventTbl,
+										success = response.success
+									})
+									logadd("queueEvent "..tostring(response.success),true)
+								end
+
+								if msg.response == "getUsers" then
+									local response = {}
+									response.users = {}
+									response.success = false
+									if ServData[msg.gameName] then
+										response.success = true
+										for k,v in pairs(ServData[msg.gameName]) do
+											response.users[#response.users+1] = k
+										end
+									end
+									modem = getModem()
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "getUsers_response",
+										users = response.users,
+										success = response.success
+									})
+									logadd("getUsers "..tostring(response.success),true)
+								end
+
+								if msg.response == "clearGame" then
+									local result = false
+									if ServData[msg.gameName] then
+										result = true
+										ServData[msg.gameName] = nil
+									end
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "clearGame_response",
+										success = result
+									})
+									logadd("clearGame "..tostring(result),true)
 								end
 							end
-							modem = getModem()
-							modem.transmit(msg.id,port,{
-								id = id,
-								serverName = serverName,
-								gameName = msg.gameName,
-								clientName = msg.clientName,
-								clientID = msg.id,
-								response = "getUsers_response",
-								users = response.users,
-								success = response.success
-							})
-							logadd("getUsers "..tostring(response.success),true)
 						end
-						
-						if msg.response == "clearGame" then
-							local result = false
-							if ServData[msg.gameName] then
-								result = true
-								ServData[msg.gameName] = nil
-							end
-							modem.transmit(msg.id,port,{
-								id = id,
-								serverName = serverName,
-								gameName = msg.gameName,
-								clientName = msg.clientName,
-								clientID = msg.id,
-								response = "clearGame_response",
-								success = result
-							})
-							logadd("clearGame "..tostring(result),true)
-						end
-						
 					else
 						if msg.response == "lookup" then
 							modem = getModem()
 							modem.transmit(msg.id,port,{
 								id = id,
 								serverName = serverName,
-								clientName = msg.clientName,
+--								clientName = msg.clientName,
 								response = "lookup_response",
 							})
-							logadd("lookup from "..msg.clientName.." (ID: "..msg.id..")",true)
-						end
+							logadd("lookup from ID: "..msg.id,true)
+						elseif msg.response == "rlwe_connect" then
+							if type(msg.publicKey) == "table" then
+								local mu, publicKey = encapsulate(msg.publicKey)
+								modem = getModem()
+								modem.transmit(msg.id,port,{
+									id = id,
+									serverName = serverName,
+--									clientName = msg.clientName,
+									response = "rlwe_connect_response",
+									publicKey = publicKey,
+									success = true,
+								})
+								mu = binaryToString(mu)
+								clientKeys[msg.id] = mu
+								logadd("RLWE connection from ID: "..msg.id,true)
+							end
+end
 					end
 				end
 			end
