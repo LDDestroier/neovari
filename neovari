@@ -588,7 +588,7 @@ local encTransmit = function(port,report, message, key)
 		else
 			outsend = message
 		end
-		modem.transmit(port,report,outsend))
+		modem.transmit(port,report,outsend)
 	else
 		modem.transmit(port,report,message)
 	end
