@@ -331,7 +331,7 @@ getKeyFromServer = function(server, timeout)
 	while true do
 		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
 		if evt == "timer" and rID == tID then
-			return false, publicKey
+			return false, nil
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
 				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.publicKey) == "table") and (type(msg.success) == "boolean") then
