@@ -551,7 +551,7 @@ getKeyFromServer = function(server, timeout)
 			return false, nil
 		elseif evt == "modem_message" then
 			if (freq == id) and (type(msg) == "table") then
-				if (msg.clientName == clientName) and (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.publicKey) == "table") and (type(msg.success) == "boolean") then
+				if (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.publicKey) == "table") and (type(msg.success) == "boolean") then
 					return decapsulate(s1, msg.publicKey)
 				end
 			end
