@@ -518,7 +518,8 @@ local main = function()
 									publicKey = publicKey,
 									success = true,
 								})
-								mu = binaryToString(mu)
+								--mu = binaryToString(mu)
+								mu = table.concat(mu)
 								clientKeys[msg.id] = mu
 								logadd("RLWE connection from ID: "..msg.id,true)
 							end
