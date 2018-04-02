@@ -313,7 +313,7 @@ local initRLWE = function()
 end
 
 aes = {}
-local initAES = function()
+local initAES = function() --[[
 	local function e(n)
 	local s=setmetatable({},{__index=_ENV or getfenv()})if setfenv then setfenv(n,s)end;return n(s)or s end
 	local t=e(function(n,...)local s=math.floor;local h,r
@@ -528,7 +528,21 @@ local initAES = function()
 	u=ciphermode.decryptString(l,s,ciphermode.decryptOFB,d)elseif r==CFBMODE then
 	u=ciphermode.decryptString(l,s,ciphermode.decryptCFB,d)elseif r==CTRMODE then
 	u=ciphermode.decryptString(l,s,ciphermode.decryptCTR,d)else error("Unknown mode",2)end;result=util.unpadByteString(u)
-	if(result==nil)then return nil end;return result end
+	if(result==nil)then return nil end;return result end --]]
+	
+	apipath = "aes"
+	if (not aes) and (not fs.exists(apipath)) then
+		print("AES API not found! Downloading...")
+		local prog = http.get("http://pastebin.com/raw/9E5UHiqv")
+		if not prog then error("FAIL!") end
+		local file = fs.open(apipath,"w")
+		file.write(prog.readAll())
+		file.close()
+	end
+	if not aes then
+		local res = os.loadAPI(apipath)
+		if not res then error("Didn't load AES API!") end
+	end
 end
 
 initAES()
