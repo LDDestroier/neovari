@@ -133,7 +133,7 @@ findServerList = function(timeout) --returns table with servers
 	end
 end
 
-local aes, keyPair, encapsulate, decapsulate
+local keyPair, encapsulate, decapsulate
 local initRLWE = function()
 	local N = 512
 	local q = 25601
@@ -312,7 +312,7 @@ local initRLWE = function()
 	end
 end
 
-local initAES = function() --[[
+local initAES = function()
 	local apipath = "aes"
 	if (not aes) and (not fs.exists(apipath)) then
 		print("AES API not found! Downloading...")
