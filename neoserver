@@ -66,9 +66,9 @@ end
 
 local logadd = function(text,display)
 	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..(text or "Invalid Log Entry")
---[[	local file = fs.open(logdir,"a")
-	file.writeLine(line)
-	file.close()	--]]
+--	local file = fs.open(logdir,"a")
+--	file.writeLine(line)
+--	file.close()
 	if display then print(line) end
 end
 
@@ -76,13 +76,13 @@ local clg = function(clientName, clientID, commandName, success)
 	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..clientName.."' ("..clientID or "?"..") did '"..commandName.."'"
 	line = (success and "Y " or "N ")..line
 	if term.isColor() then
-		if success == true then
-			term.setTextColor(colors.lime)
-		elseif success == false then
-			term.setTextColor(colors.red)
-		else
-			term.setTextColor(colors.white)
-		end
+--		if success == true then
+--			term.setTextColor(colors.lime)
+--		elseif success == false then
+--			term.setTextColor(colors.red)
+--		else
+--			term.setTextColor(colors.white)
+--		end
 	end
 	logadd(line,true)
 end
@@ -376,7 +376,7 @@ local main = function()
 										response = "setVariable_response",
 										success = result
 									})
-									clg(msg.clientName, msg.id, msg.response, response.success)
+									clg(msg.clientName, msg.id, msg.response, result)
 								end
 
 								if msg.response == "getEnvironment" then
@@ -431,7 +431,7 @@ local main = function()
 										response = "setEnvironment_response",
 										success = result
 									})
-									clg(msg.clientName, msg.id, msg.response, response.success)
+									clg(msg.clientName, msg.id, msg.response, result)
 								end
 
 								if msg.response == "queueEvent" then
@@ -494,7 +494,7 @@ local main = function()
 										response = "clearGame_response",
 										success = result
 									})
-									clg(msg.clientName, msg.id, msg.response, response.success)
+									clg(msg.clientName, msg.id, msg.response, result)
 								end
 							end
 						end
