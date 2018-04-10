@@ -386,7 +386,11 @@ local decryptInput = function(input, key)
 	if type(key) == "table" then
 		key = table.concat(key)
 	end
-	return textutils.unserialize(aes.decrypt(key,input))
+	if type(input) == "string" then
+		return textutils.unserialize(aes.decrypt(key,input))
+	else
+		return input
+	end
 end
 
 connectToServer = function(server, enckey, gameName, user, timeout)
