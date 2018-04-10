@@ -1,13 +1,16 @@
 --[[
- NeoVariable API
+NeoVariable Server
 --]]
 
 local id = os.getComputerID()
-local clientName = "neovari-client-"..math.random(0,9999999)
-local specifiedModem = {}
-port = 262
+local tArg = {...}
+local serverName = tArg[1] or ("neovari-server-"..math.random(1,999999))
+local logdir = ".neolog"
+local port = tonumber(tArg[2]) or 262
 local modem = {}
-local defaultTimeOut = 1 --seconds
+local clientKeys = {}
+
+local ServData = {}
 
 local waitForModem = function(time)
 	local tID, evt, rID = os.startTimer(time or 1)
@@ -25,42 +28,11 @@ local waitForModem = function(time)
 	end
 end
 
-specifyModem = function(mod)
-	if mod == nil then
-		specifiedModem = {}
-		return true
-	elseif type(mod) == "string" then
-		if peripheral.wrap(mod) then
-			specifiedModem = peripheral.wrap(mod)
-			specifiedModem.open(port)
-			specifiedModem.open(id)
-			return specifiedModem
-		else
-			return false
-		end
-	elseif type(mod) == "table" then
-		specifiedModem = mod
-		specifiedModem.open(port)
-		specifiedModem.open(id)
-		return specifiedModem
-	else
-		return false
-	end
-end
-
-getSpecifiedModem = function()
-	return specifiedModem
-end
-
 local getModem = function(timeout) --returns a working modem, prioritizes use of wireless modem
-	if specifiedModem.isWireless then
-		if specifiedModem.isWireless() ~= nil then
-			return specifiedModem
-		end
-	end
+	if modem.open then return modem end
 	local modems = {peripheral.find("modem")}
 	if #modems == 0 then
-		if waitForModem(timeout or defaultTimeOut) then
+		if waitForModem(timeout or 3) then
 			modems = {peripheral.find("modem")}
 		else
 			error("No modem found...")
@@ -80,57 +52,39 @@ end
 
 modem = getModem()
 
-findServer = function(timeout, sID) --returns server name, server ID
-	modem = getModem()
-	modem.transmit(port,id,{
-		id = id,
---		clientName = clientName,
-		response = "lookup",
-	})
-	local tID, evt = os.startTimer(timeout or defaultTimeOut)
-	while true do
-		evt = {os.pullEvent()}
-		if evt[1] == "timer" and evt[2] == tID then
-			return false
-		elseif evt[1] == "modem_message" then
-			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
-			if (freq == id) and (type(msg) == "table") then
-				if (type(msg.id) == "number") and (msg.response == "lookup_response") and (type(msg.serverName) == "string") then
-					if (not sID) or (sID == msg.id) then
-						return msg.serverName, msg.id
-					end
-				end
-			end
-		end
-	end
+local saveData = function()
+	local file = fs.open(saveDir,"w")
+	file.write(textutils.serialize(ServData))
+	file.close()
 end
 
-findServerList = function(timeout) --returns table with servers
-	timeout = timeout or defaultTimeOut
-	assert(tonumber(timeout), "bad argument, especially 'timeout'")
-	modem = getModem()
-	modem.transmit(port,id,{
-		id = id,
---		clientName = clientName,
-		response = "lookup",
-	})
-	local tID, evt = os.startTimer(timeout or defaultTimeOut)
-	local output = {}
-	while true do
-		evt = {os.pullEvent()}
-		if evt[1] == "timer" and evt[2] == tID then
-			return output
-		elseif evt[1] == "modem_message" then
-			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
-			if (freq == id) and (type(msg) == "table") then
-				if (type(msg.id) == "number") and (msg.response == "lookup_response") and (type(msg.serverName) == "string") then
-					if (not sID) or (sID == msg.id) then
-						output[#output+1] = {serverName = msg.serverName, id = msg.id}
-					end
-				end
-			end
+local loadData = function()
+	local file = fs.open(saveDir,"r")
+	ServData = textutils.unserialize(file.readAll())
+	file.close()
+end
+
+local logadd = function(text,display)
+	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..(text or "Invalid Log Entry")
+--[[	local file = fs.open(logdir,"a")
+	file.writeLine(line)
+	file.close()	--]]
+	if display then print(line) end
+end
+
+local clg = function(clientName, clientID, commandName, success)
+	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..clientName.."' ("..clientID or "?"..") did '"..commandName.."'"
+	line = (success and "Y " or "N ")..line
+	if term.isColor() then
+		if success == true then
+			term.setTextColor(colors.lime)
+		elseif success == false then
+			term.setTextColor(colors.red)
+		else
+			term.setTextColor(colors.white)
 		end
 	end
+	logadd(line,true)
 end
 
 local keyPair, encapsulate, decapsulate
@@ -312,6 +266,7 @@ local initRLWE = function()
 	end
 end
 
+
 local initAES = function()
 	local apipath = "aes"
 	if (not aes) and (not fs.exists(apipath)) then
@@ -331,52 +286,12 @@ end
 initAES()
 initRLWE()
 
-local binaryToString = function(b)
-	local out = ""
-	for a = 1, #b, 8 do
-		out = out..string.char(tonumber(table.concat({ b[a],b[a+1],b[a+2],b[a+3],b[a+4],b[a+5],b[a+6],b[a+7] }),2))
-	end
-	return out
-end
-
-getKeyFromServer = function(server, timeout)
-	assert(type(server) == "string", "bad argument, specifically 'server'")
-	local serverKey
-	local s1, publicKey = keyPair()
-	modem = getModem()
-	modem.transmit(port,id,{
-		id = id,
-		serverName = server,
---		clientName = clientName,
-		response = "rlwe_connect",
-		publicKey = publicKey,
-	})
-	local tID = os.startTimer(timeout or defaultTimeOut)
-	local evt, rID, freq, repfreq, msg, distance
-	while true do
-		evt, rID, freq, repfreq, msg, distance = os.pullEvent()
-		if evt == "timer" and rID == tID then
-			return false, nil
-		elseif evt == "modem_message" then
-			if (freq == id) and (type(msg) == "table") then
-				if (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.publicKey) == "table") and (type(msg.success) == "boolean") then
-					--return binaryToString(decapsulate(s1, msg.publicKey))
-					return table.concat(decapsulate(s1, msg.publicKey))
-				end
-			end
-		end
-	end
-end
---local
-encTransmit = function(port, report, message, key)
+local encTransmit = function(port,report, message, key)
 	if type(key) == "table" then
 		key = table.concat(key)
 	end
 	if key then
-		modem.transmit(port,report,{
-			id = id,
-			msg = aes.encrypt(key,textutils.serialize(message))
-		})
+		modem.transmit(port,report,aes.encrypt(key,textutils.serialize(message)))
 	else
 		modem.transmit(port,report,message)
 	end
@@ -393,241 +308,233 @@ local decryptInput = function(input, key)
 	end
 end
 
-connectToServer = function(server, enckey, gameName, user, timeout)
-	assert(type(server) == "string", "bad argument, specifically 'server'")
-	assert(enckey,"must have encryption key, use neovari.getKeyFromServer(serverName)")
-	assert(type(gameName) == "string", "bad argument, specifically 'gameName'")
-	assert(type(user) == "string", "bad argument, specifically 'user'")
-	timeout = timeout or defaultTimeOut
-	return {
-		getVariable = function(variableName, username, game) --returns success, value
-			username = username or user
-			game = game or gameName
-			if type(variableName) == "number" then variableName = tostring(variableName) end
-			assert(type(variableName) == "string", "bad argument, specifically 'variableName'")
-			modem = getModem()
-			encTransmit(port,id,{
-				id = id,
-				gameName = game,
-				serverName = server,
-				clientName = clientName,
-				user = username,
-				response = "getVariable",
-				varname = variableName
-			},enckey)
-			local tID = os.startTimer(timeout)
-			local evt, rID, freq, repfreq, msg, distance
-			while true do
-				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
-				if evt == "timer" and rID == tID then
-					return false
-				elseif evt == "modem_message" then
-					msg = decryptInput(msg, enckey)
-					if (freq == id) and (type(msg) == "table") then
-						if (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "getVariable_response") and (msg.varname == variableName) and (msg.user == username) and (type(msg.success) == "boolean") then
-							return msg.success, msg.varval
-						end
-					end
+local binaryToString = function(b)
+	local out = ""
+	for a = 1, #b, 8 do
+		out = out..string.char(tonumber(table.concat({ b[a],b[a+1],b[a+2],b[a+3],b[a+4],b[a+5],b[a+6],b[a+7] }),2))
+	end
+	return out
+end
+
+local main = function()
+	local evt
+	while true do
+		evt = {os.pullEvent()}
+		if evt[1] == "modem_message" then
+			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
+			if type(msg) == "table" and ((freq == port) or (freq == id)) then
+				if clientKeys[msg.id] and (not msg.response) then
+					msg = decryptInput(msg.msg,clientKeys[msg.id])
 				end
-			end
-		end,
+				if (type(msg)) == "table" then
+					if (type(msg.gameName) == "string") and (type(msg.response) == "string") then
+						if clientKeys[msg.id] then
+							if msg.serverName == serverName then
+								if msg.response == "getVariable" then
+									local response = {}
+									response.success = false
+									if type(msg.varname) == "string" and type(msg.user) == "string" and ServData[msg.gameName] then
+										if ServData[msg.gameName][msg.user] then
+											response.success = true
+											response.varval = ServData[msg.gameName][msg.user][msg.varname]
+										end
+									end
+									modem = getModem()
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										user = msg.user,
+										clientID = msg.id,
+										response = "getVariable_response",
+										varval = response.varval,
+										varname = msg.varname,
+										success = response.success
+									})
+									clg(msg.clientName, msg.id, msg.response, response.success)
+								end
 
-		setVariable = function(variableName, variableValue, username, game) --returns success
-			username = username or user
-			game = game or gameName
-			if type(variableName) == "number" then variableName = tostring(variableName) end
-			assert(type(variableName) == "string", "bad argument, specifically 'variableName'")
-			modem = getModem()
-			encTransmit(port,id,{
-				id = id,
-				gameName = game,
-				serverName = server,
-				clientName = clientName,
-				user = username,
-				response = "setVariable",
-				varname = variableName,
-				varval = variableValue
-			},enckey)
-			local tID = os.startTimer(timeout)
-			local evt, rID, freq, repfreq, msg, distance
-			while true do
-				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
-				if evt == "timer" and rID == tID then
-					return false
-				elseif evt == "modem_message" then
-					msg = decryptInput(msg, enckey)
-					if (freq == id) and (type(msg) == "table") then
-						if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "setVariable_response") and (msg.varname == variableName) and (msg.user == username) and (type(msg.success) == "boolean") then
-							return msg.success
+								if msg.response == "setVariable" then
+									local result
+									if (type(msg.varname) == "string") and (type(msg.user) == "string") then
+										if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
+										if not ServData[msg.gameName][msg.user] then ServData[msg.gameName][msg.user] = {} end
+										ServData[msg.gameName][msg.user][msg.varname] = (msg.varval)
+										result = true
+									else
+										result = false
+									end
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										user = msg.user,
+										clientID = msg.id,
+										varname = msg.varname,
+										response = "setVariable_response",
+										success = result
+									})
+									clg(msg.clientName, msg.id, msg.response, result)
+								end
+
+								if msg.response == "getEnvironment" then
+									local response = {}
+									response.varval = {}
+									response.success = false
+									if (type(msg.user) == "string") then
+										if ServData[msg.gameName] then
+											if ServData[msg.gameName] then
+												if ServData[msg.gameName][msg.user] then
+													response.success = true
+												for k,v in pairs(ServData[msg.gameName][msg.user]) do
+														response.varval[k] = v
+													end
+												else
+													response.success = false
+												end
+											end
+										end
+									end
+									modem = getModem()
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										user = msg.user,
+										clientID = msg.id,
+										response = "getEnvironment_response",
+										success = response.success,
+										environment = response.varval
+									})
+									clg(msg.clientName, msg.id, msg.response, response.success)
+								end
+
+								if msg.response == "setEnvironment" then
+									local result
+									if (type(msg.environment) == "table") and (type(msg.user) == "string") then
+										if not ServData[msg.gameName] then ServData[msg.gameName] = {} end
+										ServData[msg.gameName][msg.user] = (msg.environment)
+										result = true
+									else
+										result = false
+									end
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										user = msg.user,
+										clientID = msg.id,
+										response = "setEnvironment_response",
+										success = result
+									})
+									clg(msg.clientName, msg.id, msg.response, result)
+								end
+
+								if msg.response == "queueEvent" then
+									local response = {}
+									response.users = {}
+									response.success = false
+									if (type(msg.eventTbl) == "table") then
+										response.success = true
+									end
+									modem = getModem()
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "queueEvent_response",
+										eventTbl = msg.eventTbl,
+										success = response.success
+									})
+									clg(msg.clientName, msg.id, msg.response, response.success)
+								end
+
+								if msg.response == "getUsers" then
+									local response = {}
+									response.users = {}
+									response.success = false
+									if ServData[msg.gameName] then
+										response.success = true
+										for k,v in pairs(ServData[msg.gameName]) do
+											response.users[#response.users+1] = k
+										end
+									end
+									modem = getModem()
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "getUsers_response",
+										users = response.users,
+										success = response.success
+									})
+									clg(msg.clientName, msg.id, msg.response, response.success)
+								end
+
+								if msg.response == "clearGame" then
+									local result = false
+									if ServData[msg.gameName] then
+										result = true
+										ServData[msg.gameName] = nil
+									end
+									encTransmit(msg.id,port,{
+										id = id,
+										serverName = serverName,
+										gameName = msg.gameName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "clearGame_response",
+										success = result
+									})
+									clg(msg.clientName, msg.id, msg.response, result)
+								end
+							end
 						end
-					end
-				end
-			end
-		end,
-
-		getEnvironment = function(username, game) --returns success, environment
-			username = username or user
-			game = game or gameName
-			modem = getModem()
-			encTransmit(port,id,{
-				id = id,
-				gameName = game,
-				serverName = server,
-				clientName = clientName,
-				user = username,
-				response = "getEnvironment",
-			},enckey)
-			local tID = os.startTimer(timeout)
-			local evt, rID, freq, repfreq, msg, distance
-			while true do
-				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
-				if evt == "timer" and rID == tID then
-					return false
-				elseif evt == "modem_message" then
-					msg = decryptInput(msg, enckey)
-					if (freq == id) and (type(msg) == "table") then
-						if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "getEnvironment_response") and (msg.user == username) and (type(msg.success) == "boolean") and (type(msg.environment) == "table") then
-							return msg.success, msg.environment
-						end
-					end
-				end
-			end
-		end,
-
-		setEnvironment = function(environment,username,game) --returns success
-			username = username or user
-			game = gameName or game
-			assert(type(environment) == "table", "bad argument, specifically 'environment'")
-			modem = getModem()
-			encTransmit(port,id,{
-				id = id,
-				gameName = game,
-				serverName = server,
-				clientName = clientName,
-				user = username,
-				response = "setEnvironment",
-				environment = environment
-			},enckey)
-			local tID = os.startTimer(timeout)
-			local evt, rID, freq, repfreq, msg, distance
-			while true do
-				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
-				if evt == "timer" and rID == tID then
-					return false
-				elseif evt == "modem_message" then
-					msg = decryptInput(msg, enckey)
-					if (freq == id) and (type(msg) == "table") then
-						if (msg.clientID == id) and (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "setEnvironment_response") and (msg.user == username) and (type(msg.success) == "boolean") then
-							return msg.success
-						end
-					end
-				end
-			end
-		end,
-
-		queueEvent = function(...) --returns success
-			local fArg = {...}
-			assert(gameName,"gameName should have been specified upon connecting")
-			if #fArg == 0 then
-				error("Expected argument(s).")
-			else
-				modem = getModem()
-				encTransmit(port,id,{
-					id = id,
-					gameName = gameName,
-					serverName = server,
-					clientName = clientName,
-					clientID = id,
-					eventTbl = fArg,
-					response = "queueEvent"
-				},enckey)
-			end
-		end,
-
-		pullEvent = function(eventName)
-			assert(gameName,"gameName should have been specified upon connecting")
-			local tID
-			if tonumber(timeout) then
-				tID = os.startTimer(timeout)
-			end
-			local evt, rID, freq, repfreq, msg, distance
-			while true do
-				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
-				if evt == "timer" and rID == tID then
-					return nil
-				elseif evt == "modem_message" then
-					msg = decryptInput(msg, enckey)
-					if (type(msg) == "table") then
-						if (msg.serverName == server) and (msg.gameName == gameName) and (msg.response == "queueEvent_response") and (type(msg.eventTbl) == "table") and (type(msg.success) == "boolean") then
-							if (not eventName) or (msg.eventTbl[1] == eventName) then
-								return table.unpack(msg.eventTbl)
+					else
+						if msg.response == "lookup" then
+							modem = getModem()
+							modem.transmit(msg.id,port,{
+								id = id,
+								serverName = serverName,
+--								clientName = msg.clientName,
+								response = "lookup_response",
+							})
+							logadd("lookup from ID: "..msg.id,true)
+						elseif msg.response == "rlwe_connect" then
+							if type(msg.publicKey) == "table" then
+								local mu, publicKey = encapsulate(msg.publicKey)
+								modem = getModem()
+								modem.transmit(msg.id,port,{
+									id = id,
+									serverName = serverName,
+--									clientName = msg.clientName,
+									response = "rlwe_connect_response",
+									publicKey = publicKey,
+									success = true,
+								})
+								--mu = binaryToString(mu)
+								mu = table.concat(mu)
+								clientKeys[msg.id] = mu
+								logadd("RLWE connection from ID: "..msg.id,true)
 							end
 						end
 					end
 				end
 			end
-		end,
-
-		getUsers = function(game) --returns success, users
-			modem = getModem()
-			game = game or gameName
-			encTransmit(port,id,{
-				id = id,
-				gameName = game,
-				serverName = server,
-				clientName = clientName,
-				response = "getUsers",
-			},enckey)
-			local tID = os.startTimer(timeout)
-			local evt, rID, freq, repfreq, msg, distance
-			while true do
-				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
-				if evt == "timer" and rID == tID then
-					return false
-				elseif evt == "modem_message" then
-					msg = decryptInput(msg, enckey)
-					if (freq == id) and (type(msg) == "table") then
-						if (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "getUsers_response") and (type(msg.users) == "table") and (type(msg.success) == "boolean") then
-							return msg.success, msg.users
-						end
-					end
-				end
-			end
-		end,
-
-		clearGame = function(game)
-			game = game or gameName
-			modem = getModem()
-			encTransmit(port,id,{
-				id = id,
-				gameName = game,
-				serverName = server,
-				clientName = clientName,
-				response = "clearGame",
-			},enckey)
-			local tID = os.startTimer(timeout)
-			local evt, rID, freq, repfreq, msg, distance
-			while true do
-				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
-				if evt == "timer" and rID == tID then
-					return false
-				elseif evt == "modem_message" then
-					msg = decryptInput(msg, enckey)
-					if (freq == id) and (type(msg) == "table") then
-						if (msg.clientName == clientName) and (msg.serverName == server) and (msg.gameName == game) and (msg.response == "clearGame_response") and (type(msg.success) == "boolean") then
-							return msg.success
-						end
-					end
-				end
-			end
-		end,
-
-		clearVariable = function(variableName, username, game)
-			return setVariable(server, game or gameName, username or user, variableName, nil, timeout)
-		end,
-
-		clearUser = function(username, game)
-			return setEnvironment(server, game or gameName, username or user, {}, timeout)
-		end,
-	}
+		end
+	end
 end
+
+term.clear()
+term.setCursorPos(1,1)
+logadd("Initialized. (name:'"..serverName.."')",true)
+
+main()
