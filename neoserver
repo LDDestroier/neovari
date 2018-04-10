@@ -72,8 +72,15 @@ local logadd = function(text,display)
 	if display then print(line) end
 end
 
-local clg = function(clientName, clientID, commandName, success)
-	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..clientName.."' ("..(clientID or "?")..") did '"..commandName.."'"
+local clg = function(clientName, clientID, commandName, success, ...)
+	local furtherargs = {...}
+	local line = clientName.."' ("..(clientID or "?")..")\n did '"..commandName.."'"
+	if #furtherargs > 0 then
+		for a = 1, #furtherargs do
+			furtherargs[a] = table.serialize(furtherargs[a]):sub(1,8192)
+		end
+		line = line.." ("..table.concat(furtherargs,", ")..")"
+	end
 	line = (success and "Y " or "N ")..line
 	if term.isColor() then
 --		if success == true then
@@ -85,6 +92,7 @@ local clg = function(clientName, clientID, commandName, success)
 --		end
 	end
 	logadd(line,true)
+	print("")
 end
 
 local keyPair, encapsulate, decapsulate
@@ -352,7 +360,7 @@ local main = function()
 										varname = msg.varname,
 										success = response.success
 									})
-									clg(msg.clientName, msg.id, msg.response, response.success)
+									clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
 								end
 
 								if msg.response == "setVariable" then
@@ -376,7 +384,7 @@ local main = function()
 										response = "setVariable_response",
 										success = result
 									})
-									clg(msg.clientName, msg.id, msg.response, result)
+									clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
 								end
 
 								if msg.response == "getEnvironment" then
@@ -431,7 +439,7 @@ local main = function()
 										response = "setEnvironment_response",
 										success = result
 									})
-									clg(msg.clientName, msg.id, msg.response, result)
+									clg(msg.clientName, msg.id, msg.response, result, msg.environment)
 								end
 
 								if msg.response == "queueEvent" then
@@ -452,7 +460,7 @@ local main = function()
 										eventTbl = msg.eventTbl,
 										success = response.success
 									})
-									clg(msg.clientName, msg.id, msg.response, response.success)
+									clg(msg.clientName, msg.id, msg.response, response.success, msg.eventTbl)
 								end
 
 								if msg.response == "getUsers" then
