@@ -73,7 +73,7 @@ local logadd = function(text,display)
 end
 
 local clg = function(clientName, clientID, commandName, success)
-	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..clientName.."' ("..clientID or "?"..") did '"..commandName.."'"
+	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..clientName.."' ("..(clientID or "?")..") did '"..commandName.."'"
 	line = (success and "Y " or "N ")..line
 	if term.isColor() then
 --		if success == true then
