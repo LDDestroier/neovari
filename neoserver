@@ -74,7 +74,7 @@ end
 
 local clg = function(clientName, clientID, commandName, success, ...)
 	local furtherargs = {...}
-	local line = clientName.."' ("..(clientID or "?")..")\n did '"..commandName.."'"
+	local line = "'"..clientName.."' ("..(clientID or "?")..")\n did '"..commandName.."'"
 	if #furtherargs > 0 then
 		for a = 1, #furtherargs do
 			furtherargs[a] = table.serialize(furtherargs[a]):sub(1,8192)
