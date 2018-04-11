@@ -58,10 +58,14 @@ This gets the specified modem for NeoVariable to use, if one was specified.
 
 ### Here we get into server functions:
 
-In order to do all sorts of fancy things, you need to set up a neovariable **object**.
+In order to do all sorts of fancy things, you need to set up a neovariable **object**. First, get a key from a server:
 
 ```
-object = neovariable.makeServerObject( string serverName, string gameName, string userName, optional_number timeout )
+key = neovariable.getKeyFromServer( string serverName )
+```
+Then load it into **neovariable.connectToServer**
+```
+object = neovariable.connectToServer( string serverName, string key, string gameName, string userName, optional_number timeout )
 ```
 
 And from there...
