@@ -77,7 +77,7 @@ local clg = function(clientName, clientID, commandName, success, ...)
 	local line = "'"..clientName.."' ("..(clientID or "?")..")\n did '"..commandName.."'"
 	if #furtherargs > 0 then
 		for a = 1, #furtherargs do
-			furtherargs[a] = table.serialize(furtherargs[a]):sub(1,8192)
+			furtherargs[a] = textutils.serialize(furtherargs[a]):sub(1,8192)
 		end
 		line = line.." ("..table.concat(furtherargs,", ")..")"
 	end
