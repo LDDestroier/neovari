@@ -9,6 +9,7 @@ local logdir = ".neolog"
 local port = tonumber(tArg[2]) or 262
 local modem = {}
 local clientKeys = {}
+local inlog, successlog = {}, {}
 
 local ServData = {}
 
@@ -64,12 +65,19 @@ local loadData = function()
 	file.close()
 end
 
-local logadd = function(text,display)
+local scroll = 0
+
+local logadd = function(text)
 	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..(text or "Invalid Log Entry")
 --	local file = fs.open(logdir,"a")
 --	file.writeLine(line)
 --	file.close()
-	if display then print(line) end
+--	if display then print(line) end
+	inlog[#inlog+1] = line
+	successlog[#inlog] = true
+	if scroll ~= 0 then	
+		scroll = scroll + 1
+	end
 end
 
 local clg = function(clientName, clientID, commandName, success, ...)
@@ -92,7 +100,8 @@ local clg = function(clientName, clientID, commandName, success, ...)
 --		end
 	end
 	logadd(line,true)
-	print("")
+	successlog[#inlog] = success
+--	print("")
 end
 
 local keyPair, encapsulate, decapsulate
@@ -323,6 +332,45 @@ local binaryToString = function(b)
 	end
 	return out
 end
+local scr_x, scr_y = term.getSize()
+
+local setLogColors = function()
+	term.setBackgroundColor(colors.lightGray)
+	term.setTextColor(colors.black)
+end
+
+local setRegColors = function()
+	term.setBackgroundColor(colors.gray)
+	term.setTextColor(colors.white)
+end
+
+local ts = tostring
+
+local render = function(scroll)
+	local y = 2
+	local l = 1
+	repeat
+		term.setCursorPos(1,y)
+		local line, success = inlog[l+scroll], successlog[l+scroll]
+		if line then
+			setLogColors()
+			if not success then	term.setBackgroundColor(colors.pink) end
+			term.clearLine()
+			term.blit(ts(l+scroll),("f"):rep(#ts(l+scroll)),("0"):rep(#ts(l+scroll)))
+			y = y + write(" "..line) + 1
+			term.write((" "):rep(scr_x))	
+			term.setCursorPos(1,y)
+			setRegColors()
+			term.clearLine()
+			y = y + 1
+		else
+			setRegColors()
+			term.clearLine()
+			y = y + 1
+		end
+		l = l + 1
+	until y > scr_y
+end
 
 local main = function()
 	local evt
@@ -528,21 +576,37 @@ local main = function()
 									publicKey = publicKey,
 									success = true,
 								})
-								--mu = binaryToString(mu)
-								mu = table.concat(mu)
+								mu = binaryToString(mu)
+								--mu = table.concat(mu)
 								clientKeys[msg.id] = mu
 								logadd("RLWE connection from ID: "..msg.id,true)
 							end
 						end
 					end
+					render(scroll)
 				end
 			end
+		elseif evt[1] == "terminate" then
+			logadd("Aborted.",true)
+			render(scroll)
+		elseif evt[1] == "mouse_scroll" then
+			local scr,mx,my = evt[2], evt[3], evt[4]
+			scroll = math.max(0,math.min(#inlog-3, scroll + scr))
+			render(scroll)
 		end
 	end
 end
 
+setRegColors()
 term.clear()
 term.setCursorPos(1,1)
-logadd("Initialized. (name:'"..serverName.."')",true)
+if term.isColor() then
+	term.setTextColor(colors.yellow)
+else
+	term.setTextColor(colors.lightGray)
+end
+term.write(serverName)
+logadd("NeoVariable server initialized. (name:'"..serverName.."')",true)
+render(scroll)
 
 main()
