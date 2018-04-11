@@ -339,8 +339,8 @@ local binaryToString = function(b)
 	return out
 end
 
-getKeyFromServer = function(server, timeout)
-	assert(type(server) == "string", "bad argument, specifically 'server'")
+local getKeyFromServer = function(server, timeout) --this could've been built into connecttoserver, jesus christ
+--	assert(type(server) == "string", "bad argument, specifically 'server'")
 	local serverKey
 	local s1, publicKey = keyPair()
 	modem = getModem()
@@ -393,12 +393,13 @@ local decryptInput = function(input, key)
 	end
 end
 
-connectToServer = function(server, enckey, gameName, user, timeout)
+connectToServer = function(server, gameName, user, timeout)
 	assert(type(server) == "string", "bad argument, specifically 'server'")
-	assert(enckey,"must have encryption key, use neovari.getKeyFromServer(serverName)")
+--	assert(enckey,"must have encryption key, use neovari.getKeyFromServer(serverName)")
 	assert(type(gameName) == "string", "bad argument, specifically 'gameName'")
 	assert(type(user) == "string", "bad argument, specifically 'user'")
 	timeout = timeout or defaultTimeOut
+	local enckey = getKeyFromServer(server)
 	return {
 		getVariable = function(variableName, username, game) --returns success, value
 			username = username or user
@@ -629,5 +630,5 @@ connectToServer = function(server, enckey, gameName, user, timeout)
 		clearUser = function(username, game)
 			return setEnvironment(server, game or gameName, username or user, {}, timeout)
 		end,
-	}
+	}, enckey
 end
