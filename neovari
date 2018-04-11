@@ -545,6 +545,10 @@ connectToServer = function(server, gameName, user, timeout)
 			end
 		end,
 
+		queuePrivateEvent = function(cname, ...)
+			return queueEvent("NEOVARI_PRIVATE_EVENT",cname,{...})
+		end,
+
 		pullEvent = function(eventName)
 			assert(gameName,"gameName should have been specified upon connecting")
 			local tID
