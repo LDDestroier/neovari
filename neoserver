@@ -6,6 +6,7 @@ local id = os.getComputerID()
 local tArg = {...}
 local serverName = tArg[1] or ("neovari-server-"..math.random(1,999999))
 local logdir = ".neolog"
+local doWriteLog = false
 local port = tonumber(tArg[2]) or 262
 local modem = {}
 local clientKeys = {}
@@ -70,10 +71,11 @@ local scroll = 0
 
 local logadd = function(text)
 	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..(text or "Invalid Log Entry")
---	local file = fs.open(logdir,"a")
---	file.writeLine(line)
---	file.close()
---	if display then print(line) end
+	if doWriteLog then
+		local file = fs.open(logdir,"a")
+		file.writeLine(line)
+		file.close()
+	end
 	inlog[#inlog+1] = line
 	successlog[#inlog] = true
 	if scroll <= #inlog-math.floor(scr_y/3) then	
@@ -91,18 +93,8 @@ local clg = function(clientName, clientID, commandName, success, ...)
 		line = line.." ("..table.concat(furtherargs,", ")..")"
 	end
 	line = (success and "Y " or "N ")..line
-	if term.isColor() then
---		if success == true then
---			term.setTextColor(colors.lime)
---		elseif success == false then
---			term.setTextColor(colors.red)
---		else
---			term.setTextColor(colors.white)
---		end
-	end
 	logadd(line,true)
 	successlog[#inlog] = success
---	print("")
 end
 
 local keyPair, encapsulate, decapsulate
