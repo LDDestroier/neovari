@@ -400,7 +400,8 @@ connectToServer = function(server, gameName, user, timeout)
 	assert(type(user) == "string", "bad argument, specifically 'user'")
 	timeout = timeout or defaultTimeOut
 	local enckey = getKeyFromServer(server)
-	return {
+	local session
+	session = {
 		getVariable = function(variableName, username, game) --returns success, value
 			username = username or user
 			game = game or gameName
@@ -546,7 +547,7 @@ connectToServer = function(server, gameName, user, timeout)
 		end,
 
 		queuePrivateEvent = function(cname, ...)
-			return queueEvent("NEOVARI_PRIVATE_EVENT",cname,{...})
+			session.queueEvent("NEOVARI_PRIVATE_EVENT",cname,table.pack(...))
 		end,
 
 		pullEvent = function(eventName)
@@ -628,11 +629,12 @@ connectToServer = function(server, gameName, user, timeout)
 		end,
 
 		clearVariable = function(variableName, username, game)
-			return setVariable(server, game or gameName, username or user, variableName, nil, timeout)
+			return session.setVariable(server, game or gameName, username or user, variableName, nil, timeout)
 		end,
 
 		clearUser = function(username, game)
-			return setEnvironment(server, game or gameName, username or user, {}, timeout)
+			return session.setEnvironment(server, game or gameName, username or user, {}, timeout)
 		end,
-	}, enckey
+	}
+	return session, enckey
 end
