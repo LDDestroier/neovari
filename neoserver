@@ -1,5 +1,7 @@
 --[[
-NeoVariable Server
+	NeoVariable Server
+	by LDDestroier
+	Thanks to SquidDev and 
 --]]
 
 local id = os.getComputerID()
@@ -11,9 +13,18 @@ local port = tonumber(tArg[2]) or 262
 local modem = {}
 local clientKeys = {}
 local inlog, successlog = {}, {}
+local cllog, clsucclog = {}, {}
 local scr_x, scr_y = term.getSize()
 
+local ts, mf = tostring, math.floor
+
 local ServData = {}
+
+local tsv = function(visible)
+	if term.current().setVisible then
+		term.current().setVisible(visible)
+	end
+end
 
 local waitForModem = function(time)
 	local tID, evt, rID = os.startTimer(time or 1)
@@ -70,31 +81,32 @@ end
 local scroll = 0
 
 local logadd = function(text)
-	local line = "["..( os.time() + ( os.day() * 24 ) ).."] "..(text or "Invalid Log Entry")
+	local line = table.concat({"[",( os.time() + ( os.day() * 24 ) ),"] ",(text or "Invalid Log Entry")})
 	if doWriteLog then
 		local file = fs.open(logdir,"a")
 		file.writeLine(line)
 		file.close()
 	end
-	inlog[#inlog+1] = line
-	successlog[#inlog] = true
-	if scroll <= #inlog-math.floor(scr_y/3) then	
+	if scroll == #inlog-mf(scr_y/3) then	
 		scroll = scroll + 1
 	end
+	inlog[#inlog+1] = line
+	successlog[#inlog] = true
 end
 
 local clg = function(clientName, clientID, commandName, success, ...)
 	local furtherargs = {...}
-	local line = "'"..clientName.."' ("..(clientID or "?")..")\n did '"..commandName.."'"
+	local line = table.concat({"'",clientName,"' (",(clientID or "?"),")\n did '",commandName,"'"})
 	if #furtherargs > 0 then
 		for a = 1, #furtherargs do
 			furtherargs[a] = textutils.serialize(furtherargs[a]):sub(1,8192)
 		end
 		line = line.." ("..table.concat(furtherargs,", ")..")"
 	end
-	line = (success and "Y " or "N ")..line
 	logadd(line,true)
 	successlog[#inlog] = success
+	cllog[#cllog+1] = line
+	clsucclog[#cllog] = success
 end
 
 local keyPair, encapsulate, decapsulate
@@ -336,14 +348,15 @@ local setRegColors = function()
 	term.setTextColor(colors.white)
 end
 
-local ts = tostring
-
-local render = function(scroll)
+local render = function(scroll, log, slog)
+	tsv(false)
 	local y = 2
 	local l = 1
+	setRegColors()
+	term.clear()
 	repeat
 		term.setCursorPos(1,y)
-		local line, success = inlog[l+scroll], successlog[l+scroll]
+		local line, success = log[l+scroll], slog[l+scroll]
 		if line then
 			setLogColors()
 			if not success then	term.setBackgroundColor(colors.pink) end
@@ -357,17 +370,39 @@ local render = function(scroll)
 			y = y + 1
 		else
 			setRegColors()
-			term.clearLine()
 			y = y + 1
 		end
 		l = l + 1
 	until y > scr_y
+	term.setCursorPos(1,1)
+	setRegColors()
+	if term.isColor() then
+		term.setTextColor(colors.yellow)
+	else
+		term.setTextColor(colors.lightGray)
+	end
+	term.clearLine()
+	term.write(serverName)
+	term.setTextColor(colors.lightGray)
+	term.write(" "..scroll.."/"..(math.max(0,#inlog-mf(scr_y/3))))
+	tsv(true)
+end
+
+local currentLog = ""
+
+local retrieveLog = function(logname)
+	if cllog[logname] and clsucclog[logname] then
+		return cllog[logname], clsucclog[logname]
+	else
+		return inlog, successlog
+	end
 end
 
 local main = function()
-	local evt
+	local evt, log, slog
 	while true do
-		evt = {os.pullEvent()}
+		evt = {os.pullEventRaw()}
+		log, slog = retrieveLog(currentLog)
 		if evt[1] == "modem_message" then
 			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
 			if type(msg) == "table" and ((freq == port) or (freq == id)) then
@@ -591,30 +626,46 @@ local main = function()
 							end
 						end
 					end
-					render(scroll)
+					render(scroll,log,slog)
 				end
 			end
 		elseif evt[1] == "terminate" then
-			logadd("Aborted.",true)
-			render(scroll)
+			logadd("Terminated.",true)
+			render(math.max(3+#inlog-mf(scr_y/3),0),log,slog)
+			term.setCursorPos(1,scr_y)
+			term.setTextColor(colors.white)
+			term.setBackgroundColor(colors.black)
+			term.clearLine()
+			return "terminate"
 		elseif evt[1] == "mouse_scroll" then
 			local scr,mx,my = evt[2], evt[3], evt[4]
-			scroll = math.max(0,math.min(#inlog-math.floor(scr_y/3), scroll + scr))
-			render(scroll)
+			local oldescroll = scroll
+			scroll = math.max(0,math.min(#inlog-mf(scr_y/3), scroll + scr))
+			if scroll ~= oldescroll then render(scroll,log,slog) end
+		elseif evt[1] == "key" then
+			local key = evt[2]
+			local oldescroll = scroll
+			if key == keys.up then
+				scroll = math.max(0,math.min(#inlog-mf(scr_y/3), scroll - 1))
+			elseif key == keys.down then
+				scroll = math.max(0,math.min(#inlog-mf(scr_y/3), scroll + 1))
+			elseif key == keys.home then
+				scroll = 0
+			elseif key == keys["end"] then
+				scroll = #inlog-mf(scr_y/3)
+			end
+			if scroll ~= oldescroll then render(scroll,log,slog) end
+		elseif evt[1] == "term_resize" then
+			scr_x, scr_y = term.getSize()
+			render(scroll,log,slog)
 		end
 	end
 end
 
 setRegColors()
 term.clear()
-term.setCursorPos(1,1)
-if term.isColor() then
-	term.setTextColor(colors.yellow)
-else
-	term.setTextColor(colors.lightGray)
-end
-term.write(serverName)
+
 logadd("NeoVariable server initialized. (name:'"..serverName.."')",true)
-render(scroll)
+render(scroll,inlog,successlog)
 
 main()
