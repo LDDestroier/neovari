@@ -1,7 +1,7 @@
 --[[
 	NeoVariable Server
 	by LDDestroier
-	Thanks to SquidDev and 
+	Thanks to SquidDev and PG23186706924 for AES and Ring-LWE respectively!
 --]]
 
 local id = os.getComputerID()
