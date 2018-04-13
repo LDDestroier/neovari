@@ -293,7 +293,7 @@ local initAES = function()
 	local apipath = "aes"
 	if (not aes) and (not fs.exists(apipath)) then
 		print("AES API not found! Downloading...")
-		local prog = http.get("https://gist.githubusercontent.com/SquidDev/86925e07cbabd70773e53d781bd8b2fe/raw/ccea5f652cc33a979de02d6e0fe193db0c5bdfb1/aeslua.lua")
+		local prog = http.get("https://gist.githubusercontent.com/SquidDev/86925e07cbabd70773e53d781bd8b2fe/raw/ccea5f652cc33a979de02d6e0fe193db0c5bdfb1/aeslua.min.lua")
 		if not prog then error("FAIL!") end
 		local file = fs.open(apipath,"w")
 		file.write(prog.readAll())
