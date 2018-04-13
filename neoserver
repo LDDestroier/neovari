@@ -352,7 +352,7 @@ local render = function(scroll, log, slog)
 	tsv(false)
 	local y = 2
 	local l = 1
-	setRegColors()
+	setLogColors()
 	term.clear()
 	repeat
 		term.setCursorPos(1,y)
@@ -370,6 +370,7 @@ local render = function(scroll, log, slog)
 			y = y + 1
 		else
 			setRegColors()
+			term.clearLine()
 			y = y + 1
 		end
 		l = l + 1
