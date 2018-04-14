@@ -324,7 +324,7 @@ local decryptInput = function(input, key)
 		key = table.concat(key)
 	end
 	if type(input) == "string" then
-		return textutils.unserialize(aes.decrypt(key,input))
+		return textutils.unserialize(aes.decrypt(key,input) or "nil")
 	else
 		return input
 	end
