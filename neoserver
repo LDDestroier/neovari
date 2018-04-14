@@ -409,7 +409,7 @@ local main = function()
 			if type(msg) == "table" and ((freq == port) or (freq == id)) then
 				if clientKeys[msg.id] and (not msg.response) then
 					if msg.msg then
-						msg = decryptInput(msg.msg,clientKeys[msg.id])
+						msg = decryptInput(msg.msg,clientKeys[msg.id] or "")
 					else
 						msg = nil
 					end
