@@ -549,7 +549,7 @@ connectToServer = function(server, gameName, user, timeout)
 		end,
 
 		queuePrivateEvent = function(cname, ...)
-			session.queueEvent("NEOVARI_PRIVATE_EVENT",cname,table.pack(...))
+			session.queueEvent("NEOVARI_PRIVATE_EVENT",cname,{...})
 		end,
 
 		pullEvent = function(eventName)
