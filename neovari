@@ -83,10 +83,10 @@ end
 modem = getModem()
 
 findServer = function(timeout, sID) --returns server name, server ID
+	--the argument sID can take either an ID or a name, just to clarify
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
---		clientName = clientName,
 		response = "lookup",
 	})
 	local tID, evt = os.startTimer(timeout or defaultTimeOut)
@@ -98,7 +98,7 @@ findServer = function(timeout, sID) --returns server name, server ID
 			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
 			if (freq == id) and (type(msg) == "table") then
 				if (type(msg.id) == "number") and (msg.response == "lookup_response") and (type(msg.serverName) == "string") then
-					if (not sID) or (sID == msg.id) then
+					if (not sID) or (sID == msg.id) or (sID == msg.serverName) then
 						return msg.serverName, msg.id
 					end
 				end
@@ -113,7 +113,6 @@ findServerList = function(timeout) --returns table with servers
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
---		clientName = clientName,
 		response = "lookup",
 	})
 	local tID, evt = os.startTimer(timeout or defaultTimeOut)
@@ -341,15 +340,13 @@ local binaryToString = function(b)
 	return out
 end
 
-local getKeyFromServer = function(server, timeout) --this could've been built into connecttoserver, jesus christ
---	assert(type(server) == "string", "bad argument, specifically 'server'")
+local getKeyFromServer = function(server, timeout)
 	local serverKey
 	local s1, publicKey = keyPair()
 	modem = getModem()
 	modem.transmit(port,id,{
 		id = id,
 		serverName = server,
---		clientName = clientName,
 		response = "rlwe_connect",
 		publicKey = publicKey,
 	})
@@ -363,7 +360,6 @@ local getKeyFromServer = function(server, timeout) --this could've been built in
 			if (freq == id) and (type(msg) == "table") then
 				if (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.publicKey) == "table") and (type(msg.success) == "boolean") then
 					return binaryToString(decapsulate(s1, msg.publicKey))
-					--return table.concat(decapsulate(s1, msg.publicKey))
 				end
 			end
 		end
@@ -397,7 +393,6 @@ end
 
 connectToServer = function(server, gameName, user, timeout)
 	assert(type(server) == "string", "bad argument, specifically 'server'")
---	assert(enckey,"must have encryption key, use neovari.getKeyFromServer(serverName)")
 	assert(type(gameName) == "string", "bad argument, specifically 'gameName'")
 	assert(type(user) == "string", "bad argument, specifically 'user'")
 	timeout = timeout or defaultTimeOut
