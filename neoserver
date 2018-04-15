@@ -604,14 +604,15 @@ local main = function()
 						end
 					else
 						if msg.response == "lookup" then
-							modem = getModem()
-							modem.transmit(msg.id,port,{
-								id = id,
-								serverName = serverName,
---								clientName = msg.clientName,
-								response = "lookup_response",
-							})
-							logadd("lookup from ID: "..msg.id,true)
+							if (not msg.serverFind) or (msg.serverFind == id or msg.serverFind == serverName) then
+								modem = getModem()
+								modem.transmit(msg.id,port,{
+									id = id,
+									serverName = serverName,
+									response = "lookup_response",
+								})
+								logadd("lookup from ID: "..msg.id,true)
+							end
 						elseif msg.response == "rlwe_connect" then
 							if type(msg.publicKey) == "table" then
 								local mu, publicKey = encapsulate(msg.publicKey)
@@ -619,13 +620,11 @@ local main = function()
 								modem.transmit(msg.id,port,{
 									id = id,
 									serverName = serverName,
---									clientName = msg.clientName,
 									response = "rlwe_connect_response",
 									publicKey = publicKey,
 									success = true,
 								})
 								mu = binaryToString(mu)
-								--mu = table.concat(mu)
 								clientKeys[msg.id] = mu
 								logadd("RLWE connection from ID: "..msg.id,true)
 							end
