@@ -20,7 +20,7 @@ When there's a timeout, the default is to wait for a response for 1 second.
  Functions So Far:
 
 ```
-serverName, serverID = neovari.findServer( number timeout, number ID )
+serverName, serverID = neovari.findServer( number timeout, number/string ID or serverName )
 ```
 Finds a server, and returns its name, with which you'll use with the other functions.
 Searches for '**timeout**' seconds.
@@ -106,17 +106,17 @@ success, environment = getEnvironment( optional_string userName )```
 Returns every variable in '**serverName**' in '**gameName**' in '**userName**' in a string-indexed table, like the one above.
 
 ```
-success, users = neovari.getUsers()
+success, users = neovari.getUsers( optional_string gameName )
 ```
 Returns a numerically indexed table containing all users that have variables attached to them.
 
 ```
-success = neovari.clearVariable( string variableName, optional_string userName )
+success = neovari.clearVariable( string variableName, optional_string userName, optional_string gameName )
 ```
 Sets '**variableName**' in '**userName**' in '**gameName**' in '**serverName**' to nil.
 
 ```
-success = neovari.clearUser(optional_string userName)
+success = neovari.clearUser(optional_string userName, optional_string gameName)
 ```
 Sets every variable belonging to '**userName**' to nil, effectively removing that user from '**gameName**'.
 
@@ -128,7 +128,12 @@ Removes '**gameName**' from '**serverName**', along with any users within it.
 ```
 neovari.queueEvent( string event1, any event2, any event3, ... )
 ```
-Sends an event + argument list to '**serverName**' for use with '**gameName**'.
+Sends an event + argument list to '**serverName**' for use with '**gameName**', similar to how os.queueEvent() handles it.
+
+```
+neovari.queuePrivateEvent( string recipientName, string event1, any event2, any event3, ... )
+```
+Same as 'neovari.queueEvent', but sends an event that only '**recipientName**' will be able to decrypt and receive.
 
 ```
 neovari.pullEvent( optional_string eventName )
