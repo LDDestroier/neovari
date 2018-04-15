@@ -88,6 +88,7 @@ findServer = function(timeout, sID) --returns server name, server ID
 	modem.transmit(port,id,{
 		id = id,
 		response = "lookup",
+		serverFind = sID or nil
 	})
 	local tID, evt = os.startTimer(timeout or defaultTimeOut)
 	while true do
