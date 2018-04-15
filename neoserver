@@ -614,7 +614,7 @@ local main = function()
 								logadd("lookup from ID: "..msg.id,true)
 							end
 						elseif msg.response == "rlwe_connect" then
-							if type(msg.publicKey) == "table" then
+							if type(msg.publicKey) == "table" and (msg.serverName == serverName) then
 								local mu, publicKey = encapsulate(msg.publicKey)
 								modem = getModem()
 								modem.transmit(msg.id,port,{
