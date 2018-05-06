@@ -85,7 +85,7 @@ modem = getModem()
 findServer = function(timeout, sID) --returns server name, server ID
 	--the argument sID can take either an ID or a name, just to clarify
 	modem = getModem()
-	modem.transmit(port,id,{
+	modem.transmit(port,port,{
 		id = id,
 		response = "lookup",
 		serverFind = sID or nil
@@ -112,7 +112,7 @@ findServerList = function(timeout) --returns table with servers
 	timeout = timeout or defaultTimeOut
 	assert(tonumber(timeout), "bad argument, especially 'timeout'")
 	modem = getModem()
-	modem.transmit(port,id,{
+	modem.transmit(port,port,{
 		id = id,
 		response = "lookup",
 	})
@@ -345,7 +345,7 @@ local getKeyFromServer = function(server, timeout)
 	local serverKey
 	local s1, publicKey = keyPair()
 	modem = getModem()
-	modem.transmit(port,id,{
+	modem.transmit(port,port,{
 		id = id,
 		serverName = server,
 		response = "rlwe_connect",
@@ -406,7 +406,7 @@ connectToServer = function(server, gameName, user, timeout)
 			if type(variableName) == "number" then variableName = tostring(variableName) end
 			assert(type(variableName) == "string", "bad argument, specifically 'variableName'")
 			modem = getModem()
-			encTransmit(port,id,{
+			encTransmit(port,port,{
 				id = id,
 				gameName = game,
 				serverName = server,
@@ -438,7 +438,7 @@ connectToServer = function(server, gameName, user, timeout)
 			if type(variableName) == "number" then variableName = tostring(variableName) end
 			assert(type(variableName) == "string", "bad argument, specifically 'variableName'")
 			modem = getModem()
-			encTransmit(port,id,{
+			encTransmit(port,port,{
 				id = id,
 				gameName = game,
 				serverName = server,
@@ -469,7 +469,7 @@ connectToServer = function(server, gameName, user, timeout)
 			username = username or user
 			game = game or gameName
 			modem = getModem()
-			encTransmit(port,id,{
+			encTransmit(port,port,{
 				id = id,
 				gameName = game,
 				serverName = server,
@@ -499,7 +499,7 @@ connectToServer = function(server, gameName, user, timeout)
 			game = gameName or game
 			assert(type(environment) == "table", "bad argument, specifically 'environment'")
 			modem = getModem()
-			encTransmit(port,id,{
+			encTransmit(port,port,{
 				id = id,
 				gameName = game,
 				serverName = server,
@@ -532,7 +532,7 @@ connectToServer = function(server, gameName, user, timeout)
 				error("Expected argument(s).")
 			else
 				modem = getModem()
-				encTransmit(port,id,{
+				encTransmit(port,port,{
 					id = id,
 					gameName = gameName,
 					serverName = server,
@@ -575,7 +575,7 @@ connectToServer = function(server, gameName, user, timeout)
 		getUsers = function(game) --returns success, users
 			modem = getModem()
 			game = game or gameName
-			encTransmit(port,id,{
+			encTransmit(port,port,{
 				id = id,
 				gameName = game,
 				serverName = server,
@@ -602,7 +602,7 @@ connectToServer = function(server, gameName, user, timeout)
 		clearGame = function(game)
 			game = game or gameName
 			modem = getModem()
-			encTransmit(port,id,{
+			encTransmit(port,port,{
 				id = id,
 				gameName = game,
 				serverName = server,
