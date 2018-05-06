@@ -428,7 +428,7 @@ local main = function()
 										end
 									end
 									modem = getModem()
-									encTransmit(msg.id,port,{
+									encTransmit(port,port,{
 										id = id,
 										serverName = serverName,
 										gameName = msg.gameName,
@@ -453,7 +453,7 @@ local main = function()
 									else
 										result = false
 									end
-									encTransmit(msg.id,port,{
+									encTransmit(port,port,{
 										id = id,
 										serverName = serverName,
 										gameName = msg.gameName,
@@ -486,7 +486,7 @@ local main = function()
 										end
 									end
 									modem = getModem()
-									encTransmit(msg.id,port,{
+									encTransmit(port,port,{
 										id = id,
 										serverName = serverName,
 										gameName = msg.gameName,
@@ -509,7 +509,7 @@ local main = function()
 									else
 										result = false
 									end
-									encTransmit(msg.id,port,{
+									encTransmit(port,port,{
 										id = id,
 										serverName = serverName,
 										gameName = msg.gameName,
@@ -570,7 +570,7 @@ local main = function()
 										end
 									end
 									modem = getModem()
-									encTransmit(msg.id,port,{
+									encTransmit(port,port,{
 										id = id,
 										serverName = serverName,
 										gameName = msg.gameName,
@@ -589,7 +589,7 @@ local main = function()
 										result = true
 										ServData[msg.gameName] = nil
 									end
-									encTransmit(msg.id,port,{
+									encTransmit(port,port,{
 										id = id,
 										serverName = serverName,
 										gameName = msg.gameName,
@@ -606,7 +606,7 @@ local main = function()
 						if msg.response == "lookup" then
 							if (not msg.serverFind) or (msg.serverFind == id or msg.serverFind == serverName) then
 								modem = getModem()
-								modem.transmit(msg.id,port,{
+								modem.transmit(port,port,{
 									id = id,
 									serverName = serverName,
 									response = "lookup_response",
@@ -617,7 +617,7 @@ local main = function()
 							if type(msg.publicKey) == "table" and (msg.serverName == serverName) then
 								local mu, publicKey = encapsulate(msg.publicKey)
 								modem = getModem()
-								modem.transmit(msg.id,port,{
+								modem.transmit(port,port,{
 									id = id,
 									serverName = serverName,
 									response = "rlwe_connect_response",
