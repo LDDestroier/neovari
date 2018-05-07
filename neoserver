@@ -55,12 +55,12 @@ local getModem = function(timeout) --returns a working modem, prioritizes use of
 	for a = 1, #modems do
 		if modems[a].isWireless() then
 			modems[a].open(port)
-			modems[a].open(id)
+--			modems[a].open(id)
 			return modems[a]
 		end
 	end
 	modems[1].open(port)
-	modems[1].open(id)
+--	modems[1].open(id)
 	return modems[1]
 end
 
