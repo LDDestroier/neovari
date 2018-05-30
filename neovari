@@ -400,6 +400,19 @@ connectToServer = function(server, gameName, user, timeout)
 	local enckey = getKeyFromServer(server)
 	local session
 	session = {
+		disconnect = function()
+			encTransmit(port,port,{
+				id = id,
+				gameName = game or "",
+				serverName = server,
+				clientName = clientName,
+				user = username,
+				response = "disconnect",
+			},enckey)
+			for k,v in pairs(session) do
+				session[k] = nil
+			end
+		end,
 		getVariable = function(variableName, username, game) --returns success, value
 			username = username or user
 			game = game or gameName
