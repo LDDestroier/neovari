@@ -620,7 +620,6 @@ local main = function()
 							end
 						elseif msg.response == "rlwe_connect" then
 							if type(msg.publicKey) == "table" and (msg.serverName == serverName) then
-								local mu, publicKey = encapsulate(msg.publicKey)
 								modem = getModem()
 								local output
 								if clientKeys[msg.id] then
@@ -632,6 +631,7 @@ local main = function()
 									}
 									logadd("RLWE connection from ID: "..msg.id,false)
 								else
+									local mu, publicKey = encapsulate(msg.publicKey)
 									output = {
 										id = id,
 										serverName = serverName,
