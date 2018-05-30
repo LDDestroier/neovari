@@ -600,6 +600,11 @@ local main = function()
 									},clientKeys[msg.clientName])
 									clg(msg.clientName, msg.id, msg.response, result)
 								end
+								
+								if msg.response == "disconnect" then
+									clientKeys[msg.id] = nil
+									logadd("Willful disconnection by ID: "..msg.id,true)
+								end
 							end
 						end
 					else
@@ -617,16 +622,28 @@ local main = function()
 							if type(msg.publicKey) == "table" and (msg.serverName == serverName) then
 								local mu, publicKey = encapsulate(msg.publicKey)
 								modem = getModem()
-								modem.transmit(port,port,{
-									id = id,
-									serverName = serverName,
-									response = "rlwe_connect_response",
-									publicKey = publicKey,
-									success = true,
-								})
-								mu = binaryToString(mu)
-								clientKeys[msg.id] = mu
-								logadd("RLWE connection from ID: "..msg.id,true)
+								local output
+								if clientKeys[msg.id] then
+									output = {
+										id = id,
+										serverName = serverName,
+										response = "rlwe_connect_response",
+										success = false,
+									}
+									logadd("RLWE connection from ID: "..msg.id,false)
+								else
+									output = {
+										id = id,
+										serverName = serverName,
+										response = "rlwe_connect_response",
+										publicKey = publicKey,
+										success = true,
+									}
+									mu = binaryToString(mu)
+									clientKeys[msg.id] = mu
+									logadd("RLWE connection from ID: "..msg.id,true)
+								end
+								modem.transmit(port,port,output)
 							end
 						end
 					end
