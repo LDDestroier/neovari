@@ -360,21 +360,22 @@ local getKeyFromServer = function(server, timeout)
 		elseif evt == "modem_message" then
 			if (freq == port) and (type(msg) == "table") then
 				if (msg.serverName == server) and (msg.response == "rlwe_connect_response") and (type(msg.publicKey) == "table") and (type(msg.success) == "boolean") then
-					return binaryToString(decapsulate(s1, msg.publicKey))
+					return binaryToString(decapsulate(s1, msg.publicKey)), table.concat(publicKey)
 				end
 			end
 		end
 	end
 end
 
-local encTransmit = function(port, report, message, key)
+local encTransmit = function(port, report, message, key, pKey)
 	if type(key) == "table" then
 		key = table.concat(key)
 	end
 	if key then
 		modem.transmit(port,report,{
 			id = id,
-			msg = aes.encrypt(key,textutils.serialize(message))
+			publicKey = pKey,
+			msg = aes.encrypt(key,textutils.serialize(message)),
 		})
 	else
 		modem.transmit(port,report,message)
@@ -397,7 +398,7 @@ connectToServer = function(server, gameName, user, timeout)
 	assert(type(gameName) == "string", "bad argument, specifically 'gameName'")
 	assert(type(user) == "string", "bad argument, specifically 'user'")
 	timeout = timeout or defaultTimeOut
-	local enckey = getKeyFromServer(server)
+	local enckey, publicKey = getKeyFromServer(server)
 	local session
 	session = {
 		disconnect = function()
@@ -408,7 +409,7 @@ connectToServer = function(server, gameName, user, timeout)
 				clientName = clientName,
 				user = username,
 				response = "disconnect",
-			},enckey)
+			},enckey,publicKey)
 			for k,v in pairs(session) do
 				session[k] = nil
 			end
@@ -427,7 +428,7 @@ connectToServer = function(server, gameName, user, timeout)
 				user = username,
 				response = "getVariable",
 				varname = variableName
-			},enckey)
+			},enckey,publicKey)
 			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
@@ -460,7 +461,7 @@ connectToServer = function(server, gameName, user, timeout)
 				response = "setVariable",
 				varname = variableName,
 				varval = variableValue
-			},enckey)
+			},enckey,publicKey)
 			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
@@ -489,7 +490,7 @@ connectToServer = function(server, gameName, user, timeout)
 				clientName = clientName,
 				user = username,
 				response = "getEnvironment",
-			},enckey)
+			},enckey,publicKey)
 			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
@@ -520,7 +521,7 @@ connectToServer = function(server, gameName, user, timeout)
 				user = username,
 				response = "setEnvironment",
 				environment = environment
-			},enckey)
+			},enckey,publicKey)
 			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
@@ -553,7 +554,7 @@ connectToServer = function(server, gameName, user, timeout)
 					clientID = id,
 					eventTbl = fArg,
 					response = "queueEvent"
-				},enckey)
+				},enckey,publicKey)
 			end
 		end,
 
@@ -594,7 +595,7 @@ connectToServer = function(server, gameName, user, timeout)
 				serverName = server,
 				clientName = clientName,
 				response = "getUsers",
-			},enckey)
+			},enckey,publicKey)
 			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
@@ -621,7 +622,7 @@ connectToServer = function(server, gameName, user, timeout)
 				serverName = server,
 				clientName = clientName,
 				response = "clearGame",
-			},enckey)
+			},enckey,publicKey)
 			local tID = os.startTimer(timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
