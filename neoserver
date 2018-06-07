@@ -407,16 +407,16 @@ local main = function()
 		if evt[1] == "modem_message" then
 			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
 			if type(msg) == "table" and ((freq == port) or (freq == id)) then
-				if clientKeys[msg.id] and (not msg.response) then
+				if clientKeys[msg.publicKey] and (not msg.response) then
 					if msg.msg then
-						msg = decryptInput(msg.msg,clientKeys[msg.id] or "")
+						msg = decryptInput(msg.msg,clientKeys[msg.publicKey] or "")
 					else
 						msg = nil
 					end
 				end
 				if (type(msg)) == "table" then
 					if (type(msg.gameName) == "string") and (type(msg.response) == "string") then
-						if clientKeys[msg.id] then
+						if clientKeys[msg.publicKey] then
 							if msg.serverName == serverName then
 								if msg.response == "getVariable" then
 									local response = {}
@@ -602,12 +602,12 @@ local main = function()
 								end
 								
 								if msg.response == "disconnect" then
-									clientKeys[msg.id] = nil
+									clientKeys[msg.publicKey] = nil
 									logadd("Willful disconnection by ID: "..msg.id,true)
 								end
 							end
 						end
-					else
+					else	-- non-encrypted outputs
 						if msg.response == "lookup" then
 							if (not msg.serverFind) or (msg.serverFind == id or msg.serverFind == serverName) then
 								modem = getModem()
@@ -622,7 +622,7 @@ local main = function()
 							if type(msg.publicKey) == "table" and (msg.serverName == serverName) then
 								modem = getModem()
 								local output
-								if clientKeys[msg.id] then
+								if clientKeys[table.concat(msg.publicKey)] then
 									output = {
 										id = id,
 										serverName = serverName,
@@ -640,7 +640,7 @@ local main = function()
 										success = true,
 									}
 									mu = binaryToString(mu)
-									clientKeys[msg.id] = mu
+									clientKeys[table.concat(msg.publicKey)] = mu
 									logadd("RLWE connection from ID: "..msg.id,true)
 								end
 								modem.transmit(port,port,output)
