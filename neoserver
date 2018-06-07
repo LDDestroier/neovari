@@ -426,7 +426,7 @@ local main = function()
 					if type(msg.publicKey) == "table" and (msg.serverName == serverName) then
 						modem = getModem()
 						local output
-						if clientKeys[msg.clientName] and useUniqueClientNames then
+						if clientKeys[msg.publicKey] and useUniqueClientNames then
 							output = {
 								id = id,
 								serverName = serverName,
@@ -444,17 +444,17 @@ local main = function()
 								success = true,
 							}
 							mu = binaryToString(mu)
-							clientKeys[msg.clientName] = mu
-							ServData["protected"][msg.clientName] = {}
-							ServData["private"][msg.clientName] = {}
+							clientKeys[msg.publicKey] = mu
+							ServData["protected"][msg.publicKey] = {}
+							ServData["private"][msg.publicKey] = {}
 							logadd("RLWE connection from ID: "..msg.id,true)
 						end
 						modem.transmit(port,port,output)
 					end
 				else
-					if clientKeys[msg.clientName] and (not msg.response) then
+					if clientKeys[msg.publicKey] and (not msg.response) then
 						if msg.msg then
-							msg = decryptInput(msg.msg,clientKeys[msg.clientName] or "")
+							msg = decryptInput(msg.msg,clientKeys[msg.publicKey] or "")
 						else
 							msg = nil
 						end
@@ -480,7 +480,7 @@ local main = function()
 										varval = response.varval,
 										varname = msg.varname,
 										success = response.success
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
 								end
 
@@ -501,7 +501,7 @@ local main = function()
 										varval = response.varval,
 										varname = msg.varname,
 										success = response.success
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
 								end
 
@@ -522,7 +522,7 @@ local main = function()
 										varval = response.varval,
 										varname = msg.varname,
 										success = response.success
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
 								end
 
@@ -542,7 +542,7 @@ local main = function()
 										varname = msg.varname,
 										response = "setVariable_response",
 										success = result
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
 								end
 
@@ -562,7 +562,7 @@ local main = function()
 										varname = msg.varname,
 										response = "setProtectedVariable_response",
 										success = result
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
 								end
 
@@ -582,7 +582,7 @@ local main = function()
 										varname = msg.varname,
 										response = "setPrivateVariable_response",
 										success = result
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
 								end
 
@@ -602,7 +602,7 @@ local main = function()
 										response = "getEnvironment_response",
 										success = response.success,
 										environment = response.varval
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, response.success)
 								end
 
@@ -626,7 +626,7 @@ local main = function()
 										response = "getProtectedEnvironment_response",
 										success = response.success,
 										environment = response.varval
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, response.success)
 								end
 								if msg.response == "getPrivateEnvironment" then
@@ -649,7 +649,7 @@ local main = function()
 										response = "getPrivateEnvironment_response",
 										success = response.success,
 										environment = response.varval
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, response.success)
 								end
 
@@ -668,7 +668,7 @@ local main = function()
 										clientID = msg.id,
 										response = "setEnvironment_response",
 										success = result
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, result, msg.environment)
 								end
 
@@ -687,7 +687,7 @@ local main = function()
 										clientID = msg.id,
 										response = "setProtectedEnvironment_response",
 										success = result
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, result, msg.environment)
 								end
 
@@ -706,7 +706,7 @@ local main = function()
 										clientID = msg.id,
 										response = "setPrivateEnvironment_response",
 										success = result
-									},clientKeys[msg.clientName])
+									},clientKeys[msg.publicKey])
 									clg(msg.clientName, msg.id, msg.response, result, msg.environment)
 								end
 
