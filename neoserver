@@ -411,348 +411,348 @@ local main = function()
 		if evt[1] == "modem_message" then
 			local side, freq, repfreq, msg, distance = evt[2], evt[3], evt[4], evt[5], evt[6]
 			if type(msg) == "table" and ((freq == port) or (freq == id)) then
-				if clientKeys[msg.publicKey] and (not msg.response) then
-					if msg.msg then
-						msg = decryptInput(msg.msg,clientKeys[msg.publicKey] or "")
-					else
-						msg = nil
+				if msg.response == "lookup" then
+					if (not msg.serverFind) or (msg.serverFind == id or msg.serverFind == serverName) then
+						modem = getModem()
+						modem.transmit(port,port,{
+							id = id,
+							serverName = serverName,
+							response = "lookup_response",
+						})
+						logadd("lookup from ID: "..msg.id,true)
 					end
-				end
-				if (type(msg)) == "table" then
-					if (type(msg.response) == "string") and (ServData[msg.channel or "public"]) then
-						if msg.serverName == serverName then
-							
-							if msg.response == "getVariable" then
-								local response = {}
-								response.success = false
-								if type(msg.varname) == "string" then
-									response.success = true
-									response.varval = ServData["public"][msg.varname]
-								end
-								modem = getModem()
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									response = "getVariable_response",
-									varval = response.varval,
-									varname = msg.varname,
-									success = response.success
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
-							end
+				elseif msg.response == "rlwe_connect" then
+					if type(msg.publicKey) == "table" and (msg.serverName == serverName) then
+						modem = getModem()
+						local output
+						if clientKeys[table.concat(msg.publicKey)] then
+							output = {
+								id = id,
+								serverName = serverName,
+								response = "rlwe_connect_response",
+								success = false,
+							}
+							logadd("RLWE connection from ID: "..msg.id,false)
+						else
+							local mu, publicKey = encapsulate(msg.publicKey)
+							output = {
+								id = id,
+								serverName = serverName,
+								response = "rlwe_connect_response",
+								publicKey = publicKey,
+								success = true,
+							}
+							mu = binaryToString(mu)
+							clientKeys[table.concat(msg.publicKey)] = mu
+							logadd("RLWE connection from ID: "..msg.id,true)
+						end
+						modem.transmit(port,port,output)
+					end
+				else
+					if clientKeys[msg.publicKey] and (not msg.response) then
+						if msg.msg then
+							msg = decryptInput(msg.msg,clientKeys[msg.publicKey] or "")
+						else
+							msg = nil
+						end
+					end
+					if (type(msg)) == "table" then
+						if (type(msg.response) == "string") and (ServData[msg.channel or "public"]) then
+							if msg.serverName == serverName then
 
-							if msg.response == "getProtectedVariable" then
-								local response = {}
-								response.success = false
-								if type(msg.varname) == "string" and type(msg.variableOwner) == "string" then
-									response.success = true
-									response.varval = ServData["protected"][msg.variableOwner][msg.varname]
-								end
-								modem = getModem()
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									response = "getProtectedVariable_response",
-									varval = response.varval,
-									varname = msg.varname,
-									success = response.success
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
-							end
-							
-							if msg.response == "getPrivateVariable" then
-								local response = {}
-								response.success = false
-								if type(msg.varname) == "string" and type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
-									response.success = true
-									response.varval = ServData["private"][msg.variableOwner][msg.varname]
-								end
-								modem = getModem()
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									response = "getPrivateVariable_response",
-									varval = response.varval,
-									varname = msg.varname,
-									success = response.success
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
-							end
-
-							if msg.response == "setVariable" then
-								local result
-								if (type(msg.varname) == "string") then
-									ServData["public"][msg.varname] = msg.varval
-									result = true
-								else
-									result = false
-								end
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									varname = msg.varname,
-									response = "setVariable_response",
-									success = result
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
-							end
-							
-							if msg.response == "setProtectedVariable" then
-								local result
-								if type(msg.varname) == "string" and type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
-									ServData["protected"][msg.variableOwner][msg.varname] = msg.varval
-									result = true
-								else
-									result = false
-								end
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									varname = msg.varname,
-									response = "setProtectedVariable_response",
-									success = result
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
-							end
-							
-							if msg.response == "setPrivateVariable" then
-								local result
-								if type(msg.varname) == "string" and type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
-									ServData["private"][msg.variableOwner][msg.varname] = msg.varval
-									result = true
-								else
-									result = false
-								end
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									varname = msg.varname,
-									response = "setPrivateVariable_response",
-									success = result
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
-							end
-
-							if msg.response == "getEnvironment" then
-								local response = {}
-								response.varval = {}
-								response.success = true
-								for k,v in pairs(ServData["public"]) do
-									response.varval[k] = v
-								end
-								modem = getModem()
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									response = "getEnvironment_response",
-									success = response.success,
-									environment = response.varval
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, response.success)
-							end
-							
-							if msg.response == "getProtectedEnvironment" then
-								local response = {}
-								response.varval = {}
-								if type(msg.variableOwner) == "string" then
-									response.success = true
-									for k,v in pairs(ServData["protected"][msg.variableOwner]) do
-										response.varval[k] = v
-									end
-								else
+								if msg.response == "getVariable" then
+									local response = {}
 									response.success = false
-								end
-								modem = getModem()
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									response = "getProtectedEnvironment_response",
-									success = response.success,
-									environment = response.varval
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, response.success)
-							end
-							if msg.response == "getPrivateEnvironment" then
-								local response = {}
-								response.varval = {}
-								if type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
-									response.success = true
-									for k,v in pairs(ServData["private"][msg.variableOwner]) do
-										response.varval[k] = v
+									if type(msg.varname) == "string" then
+										response.success = true
+										response.varval = ServData["public"][msg.varname]
 									end
-								else
-									response.success = false
-								end
-								modem = getModem()
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									response = "getPrivateEnvironment_response",
-									success = response.success,
-									environment = response.varval
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, response.success)
-							end
-
-							if msg.response == "setEnvironment" then
-								local result
-								if type(msg.environment) == "table" then
-									result = true
-									ServData["public"] = msg.environment
-								else
-									result = false
-								end
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									response = "setEnvironment_response",
-									success = result
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, result, msg.environment)
-							end
-							
-							if msg.response == "setProtectedEnvironment" then
-								local result
-								if type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
-									result = true
-									ServData["protected"][msg.variableOwner] = msg.environment
-								else
-									result = false
-								end
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									response = "setProtectedEnvironment_response",
-									success = result
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, result, msg.environment)
-							end
-							
-							if msg.response == "setPrivateEnvironment" then
-								local result
-								if type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
-									result = true
-									ServData["private"][msg.variableOwner] = msg.environment
-								else
-									result = false
-								end
-								encTransmit(port,port,{
-									id = id,
-									serverName = serverName,
-									clientName = msg.clientName,
-									clientID = msg.id,
-									response = "setPrivateEnvironment_response",
-									success = result
-								},clientKeys[msg.clientName])
-								clg(msg.clientName, msg.id, msg.response, result, msg.environment)
-							end
-
-							if msg.response == "queueEvent" then
-								local response = {}
-								response.users = {}
-								response.success = false
-								if (type(msg.eventTbl) == "table") then
-									response.success = true
-								end
-								modem = getModem()
-								if (msg.eventTbl[1] == "NEOVARI_PRIVATE_EVENT") and type(msg.eventTbl[2]) == "string" then
-									local puser = msg.eventTbl[2]
+									modem = getModem()
 									encTransmit(port,port,{
 										id = id,
 										serverName = serverName,
 										clientName = msg.clientName,
 										clientID = msg.id,
-										response = "queueEvent_response",
-										eventTbl = msg.eventTbl[3],
+										response = "getVariable_response",
+										varval = response.varval,
+										varname = msg.varname,
 										success = response.success
-									},clientKeys[puser] or serverName)
-								else
-									for k,v in pairs(clientKeys) do
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
+								end
+
+								if msg.response == "getProtectedVariable" then
+									local response = {}
+									response.success = false
+									if type(msg.varname) == "string" and type(msg.variableOwner) == "string" then
+										response.success = true
+										response.varval = ServData["protected"][msg.variableOwner][msg.varname]
+									end
+									modem = getModem()
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "getProtectedVariable_response",
+										varval = response.varval,
+										varname = msg.varname,
+										success = response.success
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
+								end
+
+								if msg.response == "getPrivateVariable" then
+									local response = {}
+									response.success = false
+									if type(msg.varname) == "string" and type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
+										response.success = true
+										response.varval = ServData["private"][msg.variableOwner][msg.varname]
+									end
+									modem = getModem()
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "getPrivateVariable_response",
+										varval = response.varval,
+										varname = msg.varname,
+										success = response.success
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, response.success, msg.varname)
+								end
+
+								if msg.response == "setVariable" then
+									local result
+									if (type(msg.varname) == "string") then
+										ServData["public"][msg.varname] = msg.varval
+										result = true
+									else
+										result = false
+									end
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										varname = msg.varname,
+										response = "setVariable_response",
+										success = result
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
+								end
+
+								if msg.response == "setProtectedVariable" then
+									local result
+									if type(msg.varname) == "string" and type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
+										ServData["protected"][msg.variableOwner][msg.varname] = msg.varval
+										result = true
+									else
+										result = false
+									end
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										varname = msg.varname,
+										response = "setProtectedVariable_response",
+										success = result
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
+								end
+
+								if msg.response == "setPrivateVariable" then
+									local result
+									if type(msg.varname) == "string" and type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
+										ServData["private"][msg.variableOwner][msg.varname] = msg.varval
+										result = true
+									else
+										result = false
+									end
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										varname = msg.varname,
+										response = "setPrivateVariable_response",
+										success = result
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, result, msg.varname, msg.varval)
+								end
+
+								if msg.response == "getEnvironment" then
+									local response = {}
+									response.varval = {}
+									response.success = true
+									for k,v in pairs(ServData["public"]) do
+										response.varval[k] = v
+									end
+									modem = getModem()
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "getEnvironment_response",
+										success = response.success,
+										environment = response.varval
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, response.success)
+								end
+
+								if msg.response == "getProtectedEnvironment" then
+									local response = {}
+									response.varval = {}
+									if type(msg.variableOwner) == "string" then
+										response.success = true
+										for k,v in pairs(ServData["protected"][msg.variableOwner]) do
+											response.varval[k] = v
+										end
+									else
+										response.success = false
+									end
+									modem = getModem()
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "getProtectedEnvironment_response",
+										success = response.success,
+										environment = response.varval
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, response.success)
+								end
+								if msg.response == "getPrivateEnvironment" then
+									local response = {}
+									response.varval = {}
+									if type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
+										response.success = true
+										for k,v in pairs(ServData["private"][msg.variableOwner]) do
+											response.varval[k] = v
+										end
+									else
+										response.success = false
+									end
+									modem = getModem()
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "getPrivateEnvironment_response",
+										success = response.success,
+										environment = response.varval
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, response.success)
+								end
+
+								if msg.response == "setEnvironment" then
+									local result
+									if type(msg.environment) == "table" then
+										result = true
+										ServData["public"] = msg.environment
+									else
+										result = false
+									end
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "setEnvironment_response",
+										success = result
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, result, msg.environment)
+								end
+
+								if msg.response == "setProtectedEnvironment" then
+									local result
+									if type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
+										result = true
+										ServData["protected"][msg.variableOwner] = msg.environment
+									else
+										result = false
+									end
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "setProtectedEnvironment_response",
+										success = result
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, result, msg.environment)
+								end
+
+								if msg.response == "setPrivateEnvironment" then
+									local result
+									if type(msg.variableOwner) == "string" and msg.variableOwner == msg.clientName then
+										result = true
+										ServData["private"][msg.variableOwner] = msg.environment
+									else
+										result = false
+									end
+									encTransmit(port,port,{
+										id = id,
+										serverName = serverName,
+										clientName = msg.clientName,
+										clientID = msg.id,
+										response = "setPrivateEnvironment_response",
+										success = result
+									},clientKeys[msg.clientName])
+									clg(msg.clientName, msg.id, msg.response, result, msg.environment)
+								end
+
+								if msg.response == "queueEvent" then
+									local response = {}
+									response.users = {}
+									response.success = false
+									if (type(msg.eventTbl) == "table") then
+										response.success = true
+									end
+									modem = getModem()
+									if (msg.eventTbl[1] == "NEOVARI_PRIVATE_EVENT") and type(msg.eventTbl[2]) == "string" then
+										local puser = msg.eventTbl[2]
 										encTransmit(port,port,{
 											id = id,
 											serverName = serverName,
 											clientName = msg.clientName,
 											clientID = msg.id,
 											response = "queueEvent_response",
-											eventTbl = msg.eventTbl,
+											eventTbl = msg.eventTbl[3],
 											success = response.success
-										},v)
+										},clientKeys[puser] or serverName)
+									else
+										for k,v in pairs(clientKeys) do
+											encTransmit(port,port,{
+												id = id,
+												serverName = serverName,
+												clientName = msg.clientName,
+												clientID = msg.id,
+												response = "queueEvent_response",
+												eventTbl = msg.eventTbl,
+												success = response.success
+											},v)
+										end
 									end
+									clg(msg.clientName, msg.id, msg.response, response.success, msg.eventTbl)
 								end
-								clg(msg.clientName, msg.id, msg.response, response.success, msg.eventTbl)
-							end
 
-							if msg.response == "disconnect" then
-								clientKeys[msg.publicKey] = nil
---								ServData["protected"][msg.clientName] = nil
---								ServData["private"][msg.clientName] = nil
-								logadd("Willful disconnection by ID: "..msg.id,true)
-							end
-						end
-					else	-- non-encrypted outputs
-						if msg.response == "lookup" then
-							if (not msg.serverFind) or (msg.serverFind == id or msg.serverFind == serverName) then
-								modem = getModem()
-								modem.transmit(port,port,{
-									id = id,
-									serverName = serverName,
-									response = "lookup_response",
-								})
-								logadd("lookup from ID: "..msg.id,true)
-							end
-						elseif msg.response == "rlwe_connect" then
-							if type(msg.publicKey) == "table" and (msg.serverName == serverName) then
-								modem = getModem()
-								local output
-								if clientKeys[table.concat(msg.publicKey)] then
-									output = {
-										id = id,
-										serverName = serverName,
-										response = "rlwe_connect_response",
-										success = false,
-									}
-									logadd("RLWE connection from ID: "..msg.id,false)
-								else
-									local mu, publicKey = encapsulate(msg.publicKey)
-									output = {
-										id = id,
-										serverName = serverName,
-										response = "rlwe_connect_response",
-										publicKey = publicKey,
-										success = true,
-									}
-									mu = binaryToString(mu)
-									clientKeys[table.concat(msg.publicKey)] = mu
-									logadd("RLWE connection from ID: "..msg.id,true)
+								if msg.response == "disconnect" then
+									clientKeys[msg.publicKey] = nil
+--									ServData["protected"][msg.clientName] = nil
+--									ServData["private"][msg.clientName] = nil
+									logadd("Willful disconnection by ID: "..msg.id,true)
 								end
-								modem.transmit(port,port,output)
 							end
 						end
 					end
-					render(scroll,log,slog)
 				end
+				render(scroll,log,slog)
 			end
 		elseif evt[1] == "terminate" then
 			logadd("Terminated.",true)
