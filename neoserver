@@ -425,7 +425,7 @@ local main = function()
 					if type(msg.publicKey) == "table" and (msg.serverName == serverName) then
 						modem = getModem()
 						local output
-						if clientKeys[table.concat(msg.publicKey)] then
+						if clientKeys[msg.clientName] then
 							output = {
 								id = id,
 								serverName = serverName,
@@ -443,15 +443,17 @@ local main = function()
 								success = true,
 							}
 							mu = binaryToString(mu)
-							clientKeys[table.concat(msg.publicKey)] = mu
+							clientKeys[msg.clientName] = mu
+							ServData["protected"][msg.clientName] = {}
+							ServData["private"][msg.clientName] = {}
 							logadd("RLWE connection from ID: "..msg.id,true)
 						end
 						modem.transmit(port,port,output)
 					end
 				else
-					if clientKeys[msg.publicKey] and (not msg.response) then
+					if clientKeys[msg.clientName] and (not msg.response) then
 						if msg.msg then
-							msg = decryptInput(msg.msg,clientKeys[msg.publicKey] or "")
+							msg = decryptInput(msg.msg,clientKeys[msg.clientName] or "")
 						else
 							msg = nil
 						end
