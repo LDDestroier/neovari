@@ -561,12 +561,9 @@ connectToServer = function(server, gameName, user, timeout)
 			session.queueEvent("NEOVARI_PRIVATE_EVENT",cname,{...})
 		end,
 
-		pullEvent = function(eventName)
+		pullEvent = function(eventName, to)
 			assert(gameName,"gameName should have been specified upon connecting")
-			local tID
-			if tonumber(timeout) then
-				tID = os.startTimer(timeout)
-			end
+			local tID = os.startTimer(tonumber(to) or timeout)
 			local evt, rID, freq, repfreq, msg, distance
 			while true do
 				evt, rID, freq, repfreq, msg, distance = os.pullEvent()
